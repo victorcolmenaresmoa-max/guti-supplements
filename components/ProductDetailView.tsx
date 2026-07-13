@@ -4,12 +4,24 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
-import { getProduct } from '@/lib/api';
+import { getProduct, getProducts } from '@/lib/api';
 import { Product } from '@/types';
 import Navbar from './Navbar';
 import CartDrawer from './CartDrawer';
 import Loader from './Loader';
 import Icon from './Icons';
+
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeProductId(value: unknown) {
+  return safeDecode(String(value ?? '')).trim().toLowerCase();
+}
 
 export default function ProductDetailView({ productId }: { productId: string }) {
   const { addToCart, openCart } = useCart();
@@ -21,18 +33,47 @@ export default function ProductDetailView({ productId }: { productId: string }) 
     let active = true;
 
     (async () => {
-      const fallback = FALLBACK_PRODUCTS.find((item) => item.id === productId);
+      setLoading(true);
+      setProduct(null);
+
+      const requestedId = normalizeProductId(productId);
+      if (!requestedId) {
+        if (active) setLoading(false);
+        return;
+      }
+
+      const fallback = FALLBACK_PRODUCTS.find(
+        (item) => normalizeProductId(item.id) === requestedId
+      );
+
       if (fallback) {
         if (active) {
           setProduct(fallback);
+          setQuantity(1);
           setLoading(false);
         }
         return;
       }
 
-      const response = await getProduct(productId);
+      // Consulta el detalle directo. Si el Apps Script desplegado todavía no
+      // reconoce getProduct, recupera el catálogo y localiza el mismo ID.
+      const directResponse = await getProduct(productId);
+      let foundProduct =
+        directResponse.ok && directResponse.data ? directResponse.data : null;
+
+      if (!foundProduct) {
+        const catalogResponse = await getProducts();
+        if (catalogResponse.ok && catalogResponse.data) {
+          foundProduct =
+            catalogResponse.data.find(
+              (item) => normalizeProductId(item.id) === requestedId
+            ) || null;
+        }
+      }
+
       if (active) {
-        setProduct(response.ok && response.data ? response.data : null);
+        setProduct(foundProduct);
+        setQuantity(1);
         setLoading(false);
       }
     })();

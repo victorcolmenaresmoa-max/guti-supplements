@@ -1472,10 +1472,12 @@ img {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 26px;
-  place-items: center;
 }
 
 .modal-backdrop {
@@ -1484,8 +1486,12 @@ img {
 }
 
 .checkout-card {
+  display: flex;
   width: min(1120px, 100%);
+  height: min(760px, calc(100dvh - 52px));
+  min-height: 0;
   max-height: calc(100dvh - 52px);
+  flex-direction: column;
   overflow: hidden;
   background: var(--cream-50);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -1497,6 +1503,7 @@ img {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex: 0 0 auto;
   gap: 20px;
   padding: 24px 28px 20px;
   background: var(--white);
@@ -1521,12 +1528,17 @@ img {
 .checkout-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
-  max-height: calc(100dvh - 165px);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
 }
 
 .checkout-form {
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 28px;
 }
 
@@ -1681,7 +1693,10 @@ img {
 }
 
 .checkout-summary {
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 28px 24px;
   background: linear-gradient(155deg, var(--wine-950), var(--wine-800));
   color: var(--white);
@@ -3084,11 +3099,11 @@ img {
   .footer-grid { grid-template-columns: 1fr; }
   .footer-links { justify-content: flex-start; }
 
-  .modal-panel { padding: 0; place-items: stretch; }
-  .checkout-card { max-height: 100dvh; border-radius: 0; }
+  .modal-panel { align-items: stretch; padding: 0; }
+  .checkout-card { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
   .checkout-header { padding: 20px; }
   .checkout-header h3 { font-size: 29px; }
-  .checkout-layout { display: block; max-height: calc(100dvh - 112px); overflow-y: auto; }
+  .checkout-layout { display: block; flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; }
   .checkout-form { overflow: visible; padding: 20px; }
   .checkout-summary { display: none; }
   .checkout-mobile-total { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding: 14px; background: var(--cream-100); border-radius: 12px; font-size: 11px; }
