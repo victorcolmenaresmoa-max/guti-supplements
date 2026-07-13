@@ -1,21 +1,17 @@
-import { ApiResponse, OrderPayload, Product } from '@/types';
+import {
+  ApiResponse,
+  OrderPayload,
+  OrderRecord,
+  Product,
+} from '@/types';
 
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || '';
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
 
-/**
- * IMPORTANTE sobre CORS con Google Apps Script:
- * GAS no procesa correctamente las peticiones "preflight" (OPTIONS) que el
- * navegador dispara automáticamente cuando el Content-Type es
- * "application/json". Por eso, para todas las peticiones POST usamos
- * Content-Type "text/plain;charset=utf-8", lo cual el navegador considera
- * una petición "simple" y NO dispara preflight. El body sigue siendo un
- * JSON.stringify normal, y en Codigo.gs lo parseamos con JSON.parse.
- */
-
 async function gasFetch<T>(options: {
   method: 'GET' | 'POST';
   action?: string;
+  query?: Record<string, string>;
   body?: Record<string, unknown>;
 }): Promise<ApiResponse<T>> {
   if (!GAS_URL) {
@@ -30,10 +26,16 @@ async function gasFetch<T>(options: {
     let response: Response;
 
     if (options.method === 'GET') {
-      const url = options.action
-        ? `${GAS_URL}?action=${encodeURIComponent(options.action)}`
-        : GAS_URL;
-      response = await fetch(url, { method: 'GET', redirect: 'follow' });
+      const url = new URL(GAS_URL);
+      if (options.action) url.searchParams.set('action', options.action);
+      Object.entries(options.query || {}).forEach(([key, value]) =>
+        url.searchParams.set(key, value)
+      );
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        redirect: 'follow',
+        cache: 'no-store',
+      });
     } else {
       response = await fetch(GAS_URL, {
         method: 'POST',
@@ -53,8 +55,7 @@ async function gasFetch<T>(options: {
       return { ok: false, message: `Error HTTP ${response.status}` };
     }
 
-    const json = (await response.json()) as ApiResponse<T>;
-    return json;
+    return (await response.json()) as ApiResponse<T>;
   } catch (error) {
     console.error('Error de red al llamar a Google Apps Script:', error);
     return {
@@ -65,12 +66,16 @@ async function gasFetch<T>(options: {
   }
 }
 
-// ---------------------------------------------------------------
-// PRODUCTOS
-// ---------------------------------------------------------------
-
 export async function getProducts(): Promise<ApiResponse<Product[]>> {
   return gasFetch<Product[]>({ method: 'GET', action: 'getProducts' });
+}
+
+export async function getProduct(id: string): Promise<ApiResponse<Product>> {
+  return gasFetch<Product>({
+    method: 'GET',
+    action: 'getProduct',
+    query: { id },
+  });
 }
 
 export async function addProduct(
@@ -93,19 +98,13 @@ export async function updateProduct(
   });
 }
 
-export async function deleteProduct(
-  id: string
-): Promise<ApiResponse<null>> {
+export async function deleteProduct(id: string): Promise<ApiResponse<null>> {
   return gasFetch<null>({
     method: 'POST',
     action: 'deleteProduct',
     body: { id },
   });
 }
-
-// ---------------------------------------------------------------
-// PEDIDOS
-// ---------------------------------------------------------------
 
 export async function createOrder(
   order: OrderPayload
@@ -114,5 +113,23 @@ export async function createOrder(
     method: 'POST',
     action: 'createOrder',
     body: { order },
+  });
+}
+
+export async function getOrders(): Promise<ApiResponse<OrderRecord[]>> {
+  return gasFetch<OrderRecord[]>({
+    method: 'POST',
+    action: 'getOrders',
+  });
+}
+
+export async function updateOrderStatus(
+  id: string,
+  estado: string
+): Promise<ApiResponse<OrderRecord>> {
+  return gasFetch<OrderRecord>({
+    method: 'POST',
+    action: 'updateOrderStatus',
+    body: { id, estado },
   });
 }

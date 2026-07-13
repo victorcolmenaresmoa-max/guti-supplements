@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Product } from '@/types';
+import Icon from './Icons';
 
 const EMPTY_FORM = {
   nombre: '',
@@ -10,6 +11,11 @@ const EMPTY_FORM = {
   categoria: '',
   imagen: '',
   stock: '',
+  presentacion: '',
+  beneficios: '',
+  modoUso: '',
+  ingredientes: '',
+  destacado: false,
 };
 
 interface Props {
@@ -37,146 +43,153 @@ export default function AdminProductForm({
         categoria: editingProduct.categoria,
         imagen: editingProduct.imagen,
         stock: String(editingProduct.stock),
+        presentacion: editingProduct.presentacion || '',
+        beneficios: editingProduct.beneficios || '',
+        modoUso: editingProduct.modoUso || '',
+        ingredientes: editingProduct.ingredientes || '',
+        destacado: Boolean(editingProduct.destacado),
       });
     } else {
       setForm(EMPTY_FORM);
     }
+    setError('');
   }, [editingProduct]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type } = event.target;
+    setForm((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? (event.target as HTMLInputElement).checked : value,
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError('');
 
-    if (!form.nombre.trim() || !form.precio.trim()) {
-      setError('Nombre y precio son obligatorios.');
+    if (!form.nombre.trim() || !form.descripcion.trim() || !form.precio.trim()) {
+      setError('Nombre, descripción y precio son obligatorios.');
       return;
     }
-    const precioNum = parseFloat(form.precio);
-    if (isNaN(precioNum) || precioNum < 0) {
+
+    const price = Number(form.precio);
+    const stock = Number(form.stock || 0);
+
+    if (!Number.isFinite(price) || price < 0) {
       setError('El precio debe ser un número válido.');
+      return;
+    }
+
+    if (!Number.isInteger(stock) || stock < 0) {
+      setError('El stock debe ser un número entero igual o mayor que cero.');
       return;
     }
 
     await onSubmit({
       nombre: form.nombre.trim(),
       descripcion: form.descripcion.trim(),
-      precio: precioNum,
+      precio: price,
       categoria: form.categoria.trim() || 'General',
       imagen: form.imagen.trim(),
-      stock: form.stock.trim() ? parseInt(form.stock, 10) : 0,
+      stock,
+      presentacion: form.presentacion.trim(),
+      beneficios: form.beneficios.trim(),
+      modoUso: form.modoUso.trim(),
+      ingredientes: form.ingredientes.trim(),
+      destacado: form.destacado,
     });
 
     if (!editingProduct) setForm(EMPTY_FORM);
   };
 
   return (
-    <div className="panel">
-      <h3>{editingProduct ? 'Editar producto' : 'Agregar nuevo producto'}</h3>
+    <section className="admin-panel admin-product-form-panel">
+      <div className="admin-panel-heading">
+        <div>
+          <span className="eyebrow">Catálogo</span>
+          <h3>{editingProduct ? 'Editar producto' : 'Nuevo producto'}</h3>
+        </div>
+        {editingProduct && (
+          <button className="icon-btn" onClick={onCancelEdit} aria-label="Cancelar edición">
+            <Icon name="close" size={18} />
+          </button>
+        )}
+      </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="admin-product-form">
         <div className="field">
-          <label>Nombre *</label>
-          <input
-            name="nombre"
-            value={form.nombre}
-            onChange={handleChange}
-            placeholder="Ej. Creatina Monohidratada"
-          />
+          <label htmlFor="nombre">Nombre del producto *</label>
+          <input id="nombre" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Ej. Creatina Monohidratada Premium" />
         </div>
 
         <div className="field">
-          <label>Descripción</label>
-          <textarea
-            name="descripcion"
-            value={form.descripcion}
-            onChange={handleChange}
-            placeholder="Breve descripción del producto"
-          />
+          <label htmlFor="descripcion">Descripción amplia *</label>
+          <textarea id="descripcion" name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Explica qué es, para quién está pensado y sus principales características." />
         </div>
 
         <div className="field-row">
           <div className="field">
-            <label>Precio (MXN) *</label>
-            <input
-              name="precio"
-              value={form.precio}
-              onChange={handleChange}
-              placeholder="499"
-              inputMode="decimal"
-            />
+            <label htmlFor="precio">Precio en USD *</label>
+            <div className="input-prefix"><span>$</span><input id="precio" name="precio" value={form.precio} onChange={handleChange} placeholder="49.99" inputMode="decimal" /></div>
           </div>
           <div className="field">
-            <label>Stock</label>
-            <input
-              name="stock"
-              value={form.stock}
-              onChange={handleChange}
-              placeholder="20"
-              inputMode="numeric"
-            />
+            <label htmlFor="stock">Unidades disponibles</label>
+            <input id="stock" name="stock" value={form.stock} onChange={handleChange} placeholder="20" inputMode="numeric" />
+          </div>
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="categoria">Categoría</label>
+            <input id="categoria" name="categoria" value={form.categoria} onChange={handleChange} placeholder="Proteína, rendimiento, bienestar..." />
+          </div>
+          <div className="field">
+            <label htmlFor="presentacion">Presentación</label>
+            <input id="presentacion" name="presentacion" value={form.presentacion} onChange={handleChange} placeholder="300 g · 60 porciones" />
           </div>
         </div>
 
         <div className="field">
-          <label>Categoría</label>
-          <input
-            name="categoria"
-            value={form.categoria}
-            onChange={handleChange}
-            placeholder="Proteína / Fuerza / Volumen..."
-          />
+          <label htmlFor="imagen">URL de la imagen</label>
+          <input id="imagen" name="imagen" value={form.imagen} onChange={handleChange} placeholder="https://..." />
+          <small className="field-hint">Usa una imagen cuadrada, nítida y con fondo limpio para una presentación más premium.</small>
         </div>
 
         <div className="field">
-          <label>URL de la imagen</label>
-          <input
-            name="imagen"
-            value={form.imagen}
-            onChange={handleChange}
-            placeholder="https://..."
-          />
+          <label htmlFor="beneficios">Beneficios principales</label>
+          <textarea id="beneficios" name="beneficios" value={form.beneficios} onChange={handleChange} placeholder={'Escribe un beneficio por línea\nEjemplo: Complementa el consumo diario de proteína'} />
         </div>
-        <p className="tag-input-hint">
-          Puedes usar un enlace directo a imagen (Imgur, Unsplash, Drive
-          público, etc.)
-        </p>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="field">
+          <label htmlFor="modoUso">Modo de uso</label>
+          <textarea id="modoUso" name="modoUso" value={form.modoUso} onChange={handleChange} placeholder="Indicaciones generales de preparación o consumo." />
+        </div>
+
+        <div className="field">
+          <label htmlFor="ingredientes">Ingredientes</label>
+          <textarea id="ingredientes" name="ingredientes" value={form.ingredientes} onChange={handleChange} placeholder="Lista o descripción de ingredientes." />
+        </div>
+
+        <label className="admin-check-row">
+          <input type="checkbox" name="destacado" checked={form.destacado} onChange={handleChange} />
+          <span><strong>Mostrar como producto destacado</strong><small>Aparecerá con una insignia especial en el catálogo.</small></span>
+        </label>
+
+        <div className="admin-form-actions">
           {editingProduct && (
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{ flex: 1 }}
-              onClick={onCancelEdit}
-              disabled={loading}
-            >
+            <button type="button" className="btn btn-outline" onClick={onCancelEdit} disabled={loading}>
               Cancelar
             </button>
           )}
-          <button
-            type="submit"
-            className="btn btn-primary btn-block"
-            style={{ flex: 2 }}
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="spinner" />
-            ) : editingProduct ? (
-              'Guardar cambios'
-            ) : (
-              'Agregar producto'
-            )}
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? <span className="spinner" /> : <><Icon name={editingProduct ? 'check' : 'plus'} size={17} /> {editingProduct ? 'Guardar cambios' : 'Crear producto'}</>}
           </button>
         </div>
       </form>
-    </div>
+    </section>
   );
 }

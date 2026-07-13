@@ -6,19 +6,48 @@ export interface Product {
   categoria: string;
   imagen: string;
   stock: number;
+  presentacion?: string;
+  beneficios?: string;
+  modoUso?: string;
+  ingredientes?: string;
+  destacado?: boolean;
 }
 
 export interface CartItem extends Product {
   cantidad: number;
 }
 
+export interface OrderItem {
+  id: string;
+  nombre: string;
+  precio: number;
+  cantidad: number;
+}
+
 export interface OrderPayload {
   cliente: string;
-  direccion: string;
+  cedula: string;
+  email: string;
   telefono: string;
+  telefonoAlternativo: string;
+  pais: string;
+  estadoProvincia: string;
+  ciudad: string;
+  codigoPostal: string;
+  direccion: string;
+  referencia: string;
+  metodoEntrega: string;
   metodoPago: string;
-  items: { id: string; nombre: string; precio: number; cantidad: number }[];
+  horarioContacto: string;
+  notas: string;
+  items: OrderItem[];
   total: number;
+}
+
+export interface OrderRecord extends OrderPayload {
+  id: string;
+  fecha: string;
+  estado: string;
 }
 
 export interface ApiResponse<T = unknown> {

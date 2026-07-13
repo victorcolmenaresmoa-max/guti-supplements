@@ -1,29 +1,48 @@
 'use client';
 
+import Link from 'next/link';
+import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import BrandLogo from './BrandLogo';
+import Icon from './Icons';
 
 export default function Navbar() {
   const { totalItems, openCart } = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <header className="navbar">
       <div className="container navbar-inner">
-        <a href="#top" className="logo">
-          FOR<span>ZA</span>
-        </a>
+        <Link href="/" className="navbar-brand" onClick={closeMenu}>
+          <BrandLogo compact />
+        </Link>
 
-        <nav className="nav-links">
-          <a href="#catalogo">Catálogo</a>
-          <a href="#ventajas">Por qué elegirnos</a>
-          <a href="#contacto">Contacto</a>
+        <button
+          className="mobile-menu-btn"
+          type="button"
+          onClick={() => setMenuOpen((value) => !value)}
+          aria-label="Abrir menú"
+          aria-expanded={menuOpen}
+        >
+          <Icon name={menuOpen ? 'close' : 'menu'} size={21} />
+        </button>
+
+        <nav className={`nav-links ${menuOpen ? 'open' : ''}`}>
+          <Link href="/#catalogo" onClick={closeMenu}>Catálogo</Link>
+          <Link href="/#experiencia" onClick={closeMenu}>Experiencia</Link>
+          <Link href="/#asesoria" onClick={closeMenu}>Asesoría</Link>
+          <Link href="/admin" className="nav-admin-link" onClick={closeMenu}>
+            Acceso admin
+          </Link>
         </nav>
 
-        <div className="nav-actions">
-          <button className="cart-btn" onClick={openCart} aria-label="Abrir carrito">
-            🛒
-            {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-          </button>
-        </div>
+        <button className="cart-btn" onClick={openCart} aria-label="Abrir carrito">
+          <Icon name="bag" size={20} />
+          <span className="cart-btn-label">Mi pedido</span>
+          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+        </button>
       </div>
     </header>
   );

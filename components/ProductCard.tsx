@@ -1,42 +1,68 @@
 'use client';
 
+import Link from 'next/link';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
+import Icon from './Icons';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
 
   return (
-    <div className="product-card">
-      <div className="product-media">
-        {product.categoria && (
-          <span className="product-tag">{product.categoria}</span>
-        )}
-        {/* Usamos <img> nativo para admitir cualquier URL pegada por el admin sin configurar dominios extra */}
-        <img
-          src={product.imagen || 'https://placehold.co/600x450/191c24/39ff8f?text=FORZA'}
-          alt={product.nombre}
-          loading="lazy"
-        />
-      </div>
-      <div className="product-body">
-        <h3>{product.nombre}</h3>
-        <p>{product.descripcion}</p>
-        <div className="product-footer">
-          <div className="product-price">
-            ${product.precio.toFixed(2)}
-            <br />
-            <small>MXN</small>
-          </div>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => addToCart(product)}
-            disabled={product.stock <= 0}
-          >
-            {product.stock <= 0 ? 'Agotado' : 'Añadir al carrito'}
-          </button>
+    <article className="product-card">
+      <Link href={`/producto/${encodeURIComponent(product.id)}`} className="product-card-link">
+        <div className="product-media">
+          <img
+            src={
+              product.imagen ||
+              'https://placehold.co/900x900/5d0a2a/ffffff?text=GutiSupplements'
+            }
+            alt={product.nombre}
+            loading="lazy"
+          />
+          <div className="product-media-shade" />
+          {product.categoria && (
+            <span className="product-tag">{product.categoria}</span>
+          )}
+          {product.destacado && (
+            <span className="product-featured">
+              <Icon name="sparkles" size={14} /> Destacado
+            </span>
+          )}
         </div>
+
+        <div className="product-body">
+          <div className="product-heading-row">
+            <div>
+              <h3>{product.nombre}</h3>
+              {product.presentacion && <span>{product.presentacion}</span>}
+            </div>
+            <div className="product-price">${product.precio.toFixed(2)}</div>
+          </div>
+
+          <p>{product.descripcion}</p>
+
+          <div className="product-meta-row">
+            <span className={product.stock > 0 ? 'stock-ok' : 'stock-out'}>
+              {product.stock > 0 ? `${product.stock} disponibles` : 'Agotado'}
+            </span>
+            <span className="details-link">
+              Ver detalles <Icon name="arrowRight" size={15} />
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      <div className="product-card-action">
+        <button
+          className="btn btn-primary btn-block"
+          onClick={() => addToCart(product)}
+          disabled={product.stock <= 0}
+        >
+          <Icon name="bag" size={17} />
+          {product.stock <= 0 ? 'Producto agotado' : 'Agregar al pedido'}
+        </button>
       </div>
-    </div>
+    </article>
   );
 }

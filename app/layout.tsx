@@ -3,16 +3,16 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 
 export const metadata: Metadata = {
-  title: 'FORZA | Suplementos Deportivos Premium',
+  title: 'GutiSupplements | Suplementos Premium',
   description:
-    'Creatina, Proteína Whey Isolate y Ganadores de Peso de máxima calidad. Rinde más, recupera mejor.',
+    'Catálogo premium de suplementos con atención personalizada, pedidos en USD y confirmación directa.',
+  icons: {
+    icon: '/guti-logo.png',
+    apple: '/guti-logo.png',
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <body>
