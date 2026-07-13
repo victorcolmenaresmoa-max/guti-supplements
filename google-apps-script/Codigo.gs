@@ -21,17 +21,28 @@
  * 4. Cambia el valor de ADMIN_TOKEN más abajo por un texto secreto
  *    largo. Debe ser EXACTAMENTE igual al valor que pongas en la
  *    variable de entorno NEXT_PUBLIC_ADMIN_TOKEN en tu proyecto Next.js.
- * 5. Haz clic en "Implementar" > "Nueva implementación".
+ * 5. Cambia el valor de SPREADSHEET_ID por el ID de tu hoja (lo
+ *    obtienes de la URL de tu Google Sheet, entre "/d/" y "/edit").
+ *    Este paso es OBLIGATORIO, si no lo haces el script no encontrará
+ *    la hoja al ejecutarse como Web App.
+ * 6. Haz clic en "Implementar" > "Nueva implementación".
  *    - Tipo: Aplicación web
  *    - Ejecutar como: Yo (tu cuenta)
  *    - Quién tiene acceso: Cualquier usuario
- * 6. Copia la URL que termina en "/exec". Esa es tu NEXT_PUBLIC_GAS_URL.
- * 7. La primera vez Google pedirá autorizar permisos: acéptalos.
+ * 7. Copia la URL que termina en "/exec". Esa es tu NEXT_PUBLIC_GAS_URL.
+ * 8. La primera vez Google pedirá autorizar permisos: acéptalos.
  * =================================================================
  */
 
 // ⚠️ CAMBIA ESTE VALOR por un token secreto propio.
 const ADMIN_TOKEN = 'un-token-secreto-largo-y-dificil-de-adivinar';
+
+// ⚠️ CAMBIA ESTE VALOR por el ID de tu Google Sheet.
+// Lo encuentras en la URL de tu hoja:
+// https://docs.google.com/spreadsheets/d/ESTE_ES_TU_ID/edit
+// Es OBLIGATORIO ponerlo: al ejecutarse como Web App, el script no
+// tiene una hoja "activa" por defecto y necesita saber cuál abrir.
+const SPREADSHEET_ID = 'PEGA_AQUI_EL_ID_DE_TU_GOOGLE_SHEET';
 
 const SHEET_PRODUCTOS = 'Productos';
 const SHEET_PEDIDOS = 'Pedidos';
@@ -63,7 +74,7 @@ const ORDER_HEADERS = [
 // -----------------------------------------------------------------
 
 function getSheet_(name, headers) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
