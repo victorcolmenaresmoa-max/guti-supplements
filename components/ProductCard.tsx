@@ -1,16 +1,13 @@
-'use client';
-
 import Link from 'next/link';
 import { Product } from '@/types';
-import { useCart } from '@/context/CartContext';
 import Icon from './Icons';
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
+  const productUrl = `/producto/${encodeURIComponent(product.id)}`;
 
   return (
     <article className="product-card">
-      <Link href={`/producto/${encodeURIComponent(product.id)}`} className="product-card-link">
+      <Link href={productUrl} className="product-card-link">
         <div className="product-media">
           <img
             src={
@@ -21,9 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
             loading="lazy"
           />
           <div className="product-media-shade" />
-          {product.categoria && (
-            <span className="product-tag">{product.categoria}</span>
-          )}
+          {product.categoria && <span className="product-tag">{product.categoria}</span>}
           {product.destacado && (
             <span className="product-featured">
               <Icon name="sparkles" size={14} /> Destacado
@@ -54,14 +49,14 @@ export default function ProductCard({ product }: { product: Product }) {
       </Link>
 
       <div className="product-card-action">
-        <button
-          className="btn btn-primary btn-block"
-          onClick={() => addToCart(product)}
-          disabled={product.stock <= 0}
+        <Link
+          href={productUrl}
+          className={`btn btn-primary btn-block ${product.stock <= 0 ? 'disabled' : ''}`}
+          aria-disabled={product.stock <= 0}
         >
-          <Icon name="bag" size={17} />
-          {product.stock <= 0 ? 'Producto agotado' : 'Agregar al pedido'}
-        </button>
+          <Icon name="arrowRight" size={17} />
+          {product.stock <= 0 ? 'Producto agotado' : 'Ver producto y solicitar'}
+        </Link>
       </div>
     </article>
   );

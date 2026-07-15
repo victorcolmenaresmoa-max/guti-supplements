@@ -24,13 +24,25 @@ function formatDate(value: string) {
 }
 
 function normalizeWhatsapp(phone: string) {
-  return phone.replace(/\D/g, '').replace(/^00/, '');
+  return String(phone || '').replace(/\D/g, '').replace(/^00/, '');
+}
+
+function getOrderItems(order: OrderRecord) {
+  return Array.isArray(order.items) ? order.items : [];
 }
 
 function buildWhatsappMessage(order: OrderRecord) {
-  const productLines = order.items
-    .map((item) => `• ${item.cantidad} × ${item.nombre} — $${(item.cantidad * item.precio).toFixed(2)}`)
-    .join('\n');
+  const items = getOrderItems(order);
+  const productLines = items.length
+    ? items
+        .map(
+          (item) =>
+            `• ${item.cantidad} × ${item.nombre} — $${(
+              item.cantidad * item.precio
+            ).toFixed(2)}`
+        )
+        .join('\n')
+    : '• Producto por confirmar';
 
   return [
     `Hola ${order.cliente}, somos GutiSupplements.`,
@@ -39,9 +51,9 @@ function buildWhatsappMessage(order: OrderRecord) {
     productLines,
     '',
     `Total estimado: $${order.total.toFixed(2)} USD`,
-    `Método de entrega: ${order.metodoEntrega || 'Por confirmar'}`,
-    `Ubicación: ${[order.ciudad, order.estadoProvincia, order.pais].filter(Boolean).join(', ') || 'Por confirmar'}`,
-    `Método de pago: ${order.metodoPago || 'Por confirmar'}`,
+    `Ubicación: ${order.ubicacion || 'Por confirmar'}`,
+    `Entrega: ${order.metodoEntrega || 'Por confirmar'}`,
+    `Pago: ${order.metodoPago || 'Por confirmar'}`,
     '',
     'Queremos confirmar disponibilidad y coordinar contigo los próximos pasos. ¿Podemos continuar por este medio?',
   ].join('\n');
@@ -67,20 +79,22 @@ export default function AdminOrderList({
     const term = search.trim().toLowerCase();
     return orders.filter((order) => {
       const matchesFilter = filter === 'Todos' || order.estado === filter;
-      const matchesSearch =
-        !term ||
-        order.cliente.toLowerCase().includes(term) ||
-        order.telefono.toLowerCase().includes(term) ||
-        order.email.toLowerCase().includes(term) ||
-        order.id.toLowerCase().includes(term);
-      return matchesFilter && matchesSearch;
+      const searchable = [
+        order.cliente,
+        order.telefono,
+        order.email,
+        order.ubicacion,
+        order.id,
+      ]
+        .map((value) => String(value || '').toLowerCase())
+        .join(' ');
+      return matchesFilter && (!term || searchable.includes(term));
     });
   }, [orders, filter, search]);
 
   const copyOrderSummary = async (order: OrderRecord) => {
-    const text = buildWhatsappMessage(order);
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(buildWhatsappMessage(order));
       setCopiedId(order.id);
       window.setTimeout(() => setCopiedId(null), 1800);
     } catch {
@@ -94,7 +108,7 @@ export default function AdminOrderList({
         <div>
           <span className="eyebrow">Centro de pedidos</span>
           <h3>Solicitudes recibidas</h3>
-          <p>Revisa los datos, cambia el estado y contacta al cliente con un mensaje listo.</p>
+          <p>Revisa cada pedido, cambia su estado y contacta al cliente con un mensaje listo.</p>
         </div>
         <span className="admin-count-pill">{orders.length}</span>
       </div>
@@ -105,7 +119,7 @@ export default function AdminOrderList({
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nombre, teléfono, correo o ID"
+            placeholder="Buscar por nombre, WhatsApp, ubicación o ID"
           />
         </div>
         <div className="orders-filter-row">
@@ -125,11 +139,12 @@ export default function AdminOrderList({
         <div className="admin-empty-state">
           <span className="empty-icon"><Icon name="orders" size={30} /></span>
           <h4>No hay pedidos para mostrar</h4>
-          <p>Las nuevas solicitudes aparecerán aquí automáticamente.</p>
+          <p>Las nuevas solicitudes aparecerán aquí cuando el Apps Script esté conectado a esta misma hoja.</p>
         </div>
       ) : (
         <div className="orders-list">
           {filtered.map((order) => {
+            const items = getOrderItems(order);
             const whatsappPhone = normalizeWhatsapp(order.telefono);
             const whatsappUrl = whatsappPhone
               ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(buildWhatsappMessage(order))}`
@@ -151,9 +166,9 @@ export default function AdminOrderList({
                       </span>
                     </div>
                     <div className="order-contact-row">
-                      <span><Icon name="phone" size={15} /> {order.telefono}</span>
-                      <span><Icon name="mail" size={15} /> {order.email || 'Sin correo'}</span>
-                      <span><Icon name="location" size={15} /> {order.ciudad}, {order.estadoProvincia}</span>
+                      <span><Icon name="phone" size={15} /> {order.telefono || 'Sin teléfono'}</span>
+                      <span><Icon name="location" size={15} /> {order.ubicacion || 'Ubicación no indicada'}</span>
+                      {order.email && <span><Icon name="mail" size={15} /> {order.email}</span>}
                     </div>
                   </div>
                   <div className="order-total-block">
@@ -164,10 +179,10 @@ export default function AdminOrderList({
                 </div>
 
                 <div className="order-products-preview">
-                  {order.items.slice(0, 3).map((item) => (
+                  {items.slice(0, 3).map((item) => (
                     <span key={`${order.id}-${item.id}`}>{item.cantidad} × {item.nombre}</span>
                   ))}
-                  {order.items.length > 3 && <span>+{order.items.length - 3} más</span>}
+                  {items.length === 0 && <span>Producto por confirmar</span>}
                 </div>
 
                 <div className="order-actions-row">
@@ -204,44 +219,31 @@ export default function AdminOrderList({
                 </div>
 
                 {expanded && (
-                  <div className="order-details-grid">
+                  <div className="order-details-grid order-details-grid-simplified">
                     <section>
-                      <h5>Información del cliente</h5>
+                      <h5>Cliente y contacto</h5>
                       <dl>
                         <div><dt>Nombre</dt><dd>{order.cliente}</dd></div>
-                        <div><dt>Documento</dt><dd>{order.cedula || 'No indicado'}</dd></div>
+                        <div><dt>WhatsApp</dt><dd>{order.telefono || 'No indicado'}</dd></div>
                         <div><dt>Correo</dt><dd>{order.email || 'No indicado'}</dd></div>
-                        <div><dt>WhatsApp</dt><dd>{order.telefono}</dd></div>
-                        <div><dt>Teléfono alternativo</dt><dd>{order.telefonoAlternativo || 'No indicado'}</dd></div>
-                        <div><dt>Horario preferido</dt><dd>{order.horarioContacto || 'Cualquier horario'}</dd></div>
+                        <div><dt>Ubicación</dt><dd>{order.ubicacion || 'No indicada'}</dd></div>
                       </dl>
                     </section>
 
                     <section>
-                      <h5>Entrega</h5>
+                      <h5>Entrega y pago</h5>
                       <dl>
-                        <div><dt>País</dt><dd>{order.pais || 'No indicado'}</dd></div>
-                        <div><dt>Estado / Provincia</dt><dd>{order.estadoProvincia || 'No indicado'}</dd></div>
-                        <div><dt>Ciudad</dt><dd>{order.ciudad || 'No indicado'}</dd></div>
-                        <div><dt>Código postal</dt><dd>{order.codigoPostal || 'No indicado'}</dd></div>
-                        <div><dt>Dirección</dt><dd>{order.direccion || 'No indicada'}</dd></div>
-                        <div><dt>Referencia</dt><dd>{order.referencia || 'No indicada'}</dd></div>
-                      </dl>
-                    </section>
-
-                    <section>
-                      <h5>Preferencias</h5>
-                      <dl>
-                        <div><dt>Método de entrega</dt><dd>{order.metodoEntrega || 'Por confirmar'}</dd></div>
-                        <div><dt>Método de pago</dt><dd>{order.metodoPago || 'Por confirmar'}</dd></div>
+                        <div><dt>Entrega</dt><dd>{order.metodoEntrega || 'Por confirmar'}</dd></div>
+                        <div><dt>Dirección</dt><dd>{order.direccion || 'No aplica / no indicada'}</dd></div>
+                        <div><dt>Pago</dt><dd>{order.metodoPago || 'Por confirmar'}</dd></div>
                         <div><dt>Notas</dt><dd>{order.notas || 'Sin notas adicionales'}</dd></div>
                       </dl>
                     </section>
 
                     <section className="order-detail-products">
-                      <h5>Productos solicitados</h5>
+                      <h5>Producto solicitado</h5>
                       <div>
-                        {order.items.map((item) => (
+                        {items.map((item) => (
                           <article key={`${order.id}-detail-${item.id}`}>
                             <span>{item.cantidad} × {item.nombre}</span>
                             <strong>${(item.cantidad * item.precio).toFixed(2)}</strong>

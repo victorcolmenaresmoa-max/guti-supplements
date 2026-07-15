@@ -13,10 +13,6 @@ export interface Product {
   destacado?: boolean;
 }
 
-export interface CartItem extends Product {
-  cantidad: number;
-}
-
 export interface OrderItem {
   id: string;
   nombre: string;
@@ -26,19 +22,12 @@ export interface OrderItem {
 
 export interface OrderPayload {
   cliente: string;
-  cedula: string;
-  email: string;
   telefono: string;
-  telefonoAlternativo: string;
-  pais: string;
-  estadoProvincia: string;
-  ciudad: string;
-  codigoPostal: string;
+  email: string;
+  ubicacion: string;
   direccion: string;
-  referencia: string;
   metodoEntrega: string;
   metodoPago: string;
-  horarioContacto: string;
   notas: string;
   items: OrderItem[];
   total: number;

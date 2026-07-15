@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useCart } from '@/context/CartContext';
 import BrandLogo from './BrandLogo';
 import Icon from './Icons';
 
 export default function Navbar() {
-  const { totalItems, openCart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
-
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -38,11 +35,10 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        <button className="cart-btn" onClick={openCart} aria-label="Abrir carrito">
-          <Icon name="bag" size={20} />
-          <span className="cart-btn-label">Mi pedido</span>
-          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-        </button>
+        <Link href="/#catalogo" className="nav-shop-cta" onClick={closeMenu}>
+          <Icon name="products" size={18} />
+          <span>Ver productos</span>
+        </Link>
       </div>
     </header>
   );

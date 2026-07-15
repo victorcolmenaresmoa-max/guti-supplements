@@ -1,16 +1,18 @@
-GutiSupplements — corrección de detalle de producto y scroll del pedido
+GutiSupplements — flujo directo de pedidos
+==========================================
 
-Reemplaza únicamente estos tres archivos respetando sus rutas:
+CAMBIOS DE ESTA VERSIÓN
+- Se eliminó completamente el carrito visible de la tienda.
+- Cada producto abre su propia vista y permite solicitarlo directamente.
+- Se retiró la sección inferior “Conoce el producto”.
+- El formulario ahora solicita solamente datos esenciales.
+- El pedido se guarda con un ID único y se procesa con LockService para soportar
+  varios clientes al mismo tiempo sin mezclar solicitudes.
+- El panel administrativo fue adaptado al nuevo formato de pedidos.
+- El Apps Script agrega automáticamente las columnas faltantes en la hoja Pedidos.
 
-1. app/producto/[id]/page.tsx
-2. components/ProductDetailView.tsx
-3. app/globals.css
+ARCHIVOS IMPORTANTES
+- google-apps-script/Codigo.gs: reemplazar en Google Apps Script.
+- PASOS_DESPLIEGUE.txt: instrucciones completas de actualización.
 
-No necesitas reemplazar api.ts, ProductCard.tsx, CheckoutForm.tsx ni Codigo.gs para estas dos correcciones.
-
-Qué se corrigió:
-- Compatibilidad de params con las versiones modernas de Next.js.
-- Normalización del ID del producto.
-- Recuperación alternativa desde el catálogo completo cuando el Apps Script desplegado todavía no responde a getProduct.
-- Scroll interno real en el formulario de pedido para escritorio.
-- Scroll adaptable de pantalla completa en teléfonos.
+No subas archivos .env con contraseñas o tokens al repositorio.

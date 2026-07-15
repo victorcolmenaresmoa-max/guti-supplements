@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
-import CartDrawer from '@/components/CartDrawer';
 import ProductCard from '@/components/ProductCard';
 import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
@@ -59,8 +58,6 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <CartDrawer />
-
       <main>
         <section className="hero" id="inicio">
           <div className="hero-orb hero-orb-one" />
@@ -133,8 +130,8 @@ export default function HomePage() {
                 <span className="eyebrow">Colección GutiSupplements</span>
                 <h2>Encuentra tu próximo aliado</h2>
                 <p>
-                  Entra en cada producto para consultar beneficios, presentación,
-                  modo de uso, ingredientes y disponibilidad.
+                  Entra en cada producto para consultar su descripción, presentación,
+                  precio y disponibilidad antes de enviar una solicitud directa.
                 </p>
               </div>
               <div className="catalog-search">
@@ -195,8 +192,8 @@ export default function HomePage() {
                 <strong>De la selección a la confirmación</strong>
                 <ol>
                   <li><span>1</span> Explora la información completa.</li>
-                  <li><span>2</span> Añade tus productos al pedido.</li>
-                  <li><span>3</span> Completa tus datos de entrega.</li>
+                  <li><span>2</span> Selecciona el producto que deseas solicitar.</li>
+                  <li><span>3</span> Completa un formulario breve con tus datos esenciales.</li>
                   <li><span>4</span> Recibe confirmación por WhatsApp.</li>
                 </ol>
               </div>
@@ -207,8 +204,8 @@ export default function HomePage() {
               <h2>No solo compras un producto. Recibes acompañamiento.</h2>
               <p>
                 Cada solicitud llega directamente al panel de GutiSupplements.
-                El equipo puede revisar los productos elegidos, tus datos de entrega
-                y preferencias para contactarte con toda la información preparada.
+                El equipo recibe el producto solicitado y tus datos esenciales de entrega
+                para contactarte con toda la información preparada.
               </p>
               <div className="advisory-points">
                 <div><Icon name="check" size={17} /><span>Sin cobros automáticos inesperados.</span></div>
@@ -216,7 +213,7 @@ export default function HomePage() {
                 <div><Icon name="check" size={17} /><span>Comunicación directa y organizada.</span></div>
               </div>
               <a href="#catalogo" className="btn btn-primary">
-                Comenzar mi pedido <Icon name="arrowRight" size={18} />
+                Explorar productos <Icon name="arrowRight" size={18} />
               </a>
             </div>
           </div>

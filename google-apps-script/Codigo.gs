@@ -40,19 +40,12 @@ const ORDER_HEADERS = [
   'ID',
   'Fecha',
   'Cliente',
-  'Cedula',
-  'Email',
   'Telefono',
-  'TelefonoAlternativo',
-  'Pais',
-  'EstadoProvincia',
-  'Ciudad',
-  'CodigoPostal',
+  'Email',
+  'Ubicacion',
   'Direccion',
-  'Referencia',
   'MetodoEntrega',
   'MetodoPago',
-  'HorarioContacto',
   'Notas',
   'Items',
   'Total',
@@ -68,6 +61,30 @@ const VALID_ORDER_STATUSES = [
   'Entregado',
   'Cancelado',
 ];
+
+/**
+ * Ejecuta esta función una sola vez desde el editor de Apps Script después
+ * de configurar SPREADSHEET_ID y ADMIN_TOKEN. Crea las pestañas necesarias
+ * y agrega las columnas faltantes sin eliminar pedidos ni productos previos.
+ */
+function setupGutiSupplements() {
+  const spreadsheet = getSpreadsheet_();
+  const productsSheet = getSheet_(SHEET_PRODUCTOS, PRODUCT_HEADERS);
+  const ordersSheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
+  SpreadsheetApp.flush();
+
+  const result = {
+    spreadsheetId: spreadsheet.getId(),
+    spreadsheetName: spreadsheet.getName(),
+    spreadsheetUrl: spreadsheet.getUrl(),
+    productsSheet: productsSheet.getName(),
+    ordersSheet: ordersSheet.getName(),
+    orderHeaders: getHeaders_(ordersSheet),
+  };
+
+  Logger.log(JSON.stringify(result, null, 2));
+  return result;
+}
 
 // ---------------------------------------------------------------------
 // Utilidades de hojas
@@ -244,23 +261,22 @@ function rowToOrder_(row, headers) {
     return map[header] !== undefined ? row[map[header]] : '';
   };
 
+  const legacyLocation = [read('Ciudad'), read('EstadoProvincia'), read('Pais')]
+    .filter(function (value) {
+      return String(value || '').trim() !== '';
+    })
+    .join(', ');
+
   return {
     id: String(read('ID') || ''),
     fecha: dateToIso_(read('Fecha')),
     cliente: String(read('Cliente') || ''),
-    cedula: String(read('Cedula') || ''),
-    email: String(read('Email') || ''),
     telefono: String(read('Telefono') || ''),
-    telefonoAlternativo: String(read('TelefonoAlternativo') || ''),
-    pais: String(read('Pais') || ''),
-    estadoProvincia: String(read('EstadoProvincia') || ''),
-    ciudad: String(read('Ciudad') || ''),
-    codigoPostal: String(read('CodigoPostal') || ''),
+    email: String(read('Email') || ''),
+    ubicacion: String(read('Ubicacion') || legacyLocation || ''),
     direccion: String(read('Direccion') || ''),
-    referencia: String(read('Referencia') || ''),
     metodoEntrega: String(read('MetodoEntrega') || ''),
     metodoPago: String(read('MetodoPago') || ''),
-    horarioContacto: String(read('HorarioContacto') || ''),
     notas: String(read('Notas') || ''),
     items: safeJsonParse_(read('Items'), []),
     total: Number(read('Total')) || 0,
@@ -443,44 +459,77 @@ function handleDeleteProduct_(id) {
 // ---------------------------------------------------------------------
 
 function handleCreateOrder_(order) {
+  const location = order
+    ? String(
+        order.ubicacion ||
+          [order.ciudad, order.estadoProvincia, order.pais]
+            .filter(function (value) {
+              return String(value || '').trim() !== '';
+            })
+            .join(', ') ||
+          ''
+      ).trim()
+    : '';
+
   if (
     !order ||
-    !order.cliente ||
-    !order.email ||
-    !order.telefono ||
-    !order.items ||
+    !String(order.cliente || '').trim() ||
+    !String(order.telefono || '').trim() ||
+    !location ||
+    !Array.isArray(order.items) ||
     order.items.length === 0
   ) {
     return jsonResponse_({ ok: false, message: 'Datos de pedido incompletos.' });
   }
 
-  const sheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
-  const id = generateId_();
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) {
+    return jsonResponse_({
+      ok: false,
+      message: 'Hay varios pedidos procesándose. Inténtalo nuevamente en unos segundos.',
+    });
+  }
 
-  appendObject_(sheet, {
-    ID: id,
-    Fecha: new Date(),
-    Cliente: order.cliente,
-    Cedula: order.cedula || '',
-    Email: order.email || '',
-    Telefono: order.telefono || '',
-    TelefonoAlternativo: order.telefonoAlternativo || '',
-    Pais: order.pais || '',
-    EstadoProvincia: order.estadoProvincia || '',
-    Ciudad: order.ciudad || '',
-    CodigoPostal: order.codigoPostal || '',
-    Direccion: order.direccion || '',
-    Referencia: order.referencia || '',
-    MetodoEntrega: order.metodoEntrega || '',
-    MetodoPago: order.metodoPago || '',
-    HorarioContacto: order.horarioContacto || '',
-    Notas: order.notas || '',
-    Items: JSON.stringify(order.items),
-    Total: Number(order.total) || 0,
-    Estado: 'Pendiente',
-  });
+  try {
+    const sheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
+    const id = generateId_();
 
-  return jsonResponse_({ ok: true, data: { id: id } });
+    appendObject_(sheet, {
+      ID: id,
+      Fecha: new Date(),
+      Cliente: String(order.cliente || '').trim(),
+      Telefono: String(order.telefono || '').trim(),
+      Email: String(order.email || '').trim(),
+      Ubicacion: location,
+      Direccion: String(order.direccion || '').trim(),
+      MetodoEntrega: String(order.metodoEntrega || 'Por confirmar').trim(),
+      MetodoPago: String(order.metodoPago || 'Por definir con el asesor').trim(),
+      Notas: String(order.notas || '').trim(),
+      Items: JSON.stringify(order.items),
+      Total: Number(order.total) || 0,
+      Estado: 'Pendiente',
+
+      // Compatibilidad con columnas antiguas que puedan seguir en la hoja.
+      Ciudad: location,
+      EstadoProvincia: '',
+      Pais: '',
+      Cedula: '',
+      TelefonoAlternativo: '',
+      CodigoPostal: '',
+      Referencia: '',
+      HorarioContacto: '',
+    });
+
+    SpreadsheetApp.flush();
+
+    if (findRowById_(sheet, id) === -1) {
+      throw new Error('La fila del pedido no pudo verificarse después de guardarla.');
+    }
+
+    return jsonResponse_({ ok: true, data: { id: id, saved: true } });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function handleGetOrders_() {
