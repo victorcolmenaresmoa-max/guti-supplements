@@ -7,30 +7,31 @@ import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
 import { getProducts } from '@/lib/api';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
+import { SITE_PHOTOS, makePhotoFallback } from '@/lib/sitePhotos';
 import { Product } from '@/types';
 
 const CATEGORY_SHOWCASE = [
   {
     name: 'Proteína',
-    art: '/art/cat-proteina.svg',
+    photo: SITE_PHOTOS.categories.Proteina,
     tagline: 'Aislados y concentrados',
     copy: 'Complementa tu ingesta diaria con fórmulas de alta solubilidad.',
   },
   {
     name: 'Rendimiento',
-    art: '/art/cat-rendimiento.svg',
+    photo: SITE_PHOTOS.categories.Rendimiento,
     tagline: 'Fuerza y energía',
     copy: 'Creatina, pre-entrenos y esenciales para tus sesiones intensas.',
   },
   {
     name: 'Volumen',
-    art: '/art/cat-volumen.svg',
+    photo: SITE_PHOTOS.categories.Volumen,
     tagline: 'Ganancia calórica',
     copy: 'Mezclas balanceadas para sumar calorías de forma práctica.',
   },
   {
     name: 'Bienestar',
-    art: '/art/cat-bienestar.svg',
+    photo: SITE_PHOTOS.categories.Bienestar,
     tagline: 'Salud integral',
     copy: 'Vitaminas y apoyos diarios para acompañar tu estilo de vida.',
   },
@@ -186,9 +187,12 @@ export default function HomePage() {
 
             <div className="hero-visual" aria-label="GutiSupplements">
               <div className="hero-stage">
-                <img className="hero-jar" src="/art/hero-jar.svg" alt="Envase premium GutiSupplements" />
-                <img className="hero-float-shaker" src="/art/shaker.svg" alt="" />
-                <img className="hero-float-caps" src="/art/capsules.svg" alt="" />
+                <img
+                  className="hero-photo"
+                  src={SITE_PHOTOS.hero.photo}
+                  onError={makePhotoFallback(SITE_PHOTOS.hero.fallback)}
+                  alt="Suplemento premium GutiSupplements"
+                />
                 <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
               <div className="floating-card floating-card-top">
@@ -255,7 +259,12 @@ export default function HomePage() {
                   onClick={() => goToCategory(category.name)}
                 >
                   <div className="category-art">
-                    <img src={category.art} alt={category.name} loading="lazy" />
+                    <img
+                      src={category.photo.photo}
+                      onError={makePhotoFallback(category.photo.fallback)}
+                      alt={category.name}
+                      loading="lazy"
+                    />
                     <span className="category-tagline">{category.tagline}</span>
                   </div>
                   <div className="category-body">
@@ -273,7 +282,12 @@ export default function HomePage() {
         <section className="section feature-section">
           <div className="container feature-grid">
             <div className="feature-visual">
-              <img src="/art/feature-lab.svg" alt="Estándares de calidad GutiSupplements" />
+              <img
+                src={SITE_PHOTOS.feature.photo}
+                onError={makePhotoFallback(SITE_PHOTOS.feature.fallback)}
+                alt="Estándares de calidad GutiSupplements"
+                loading="lazy"
+              />
               <div className="feature-visual-badge">
                 <Icon name="award" size={18} />
                 <div><strong>Estándar premium</strong><small>Cada lote, verificado</small></div>
