@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import Loader from '@/components/Loader';
@@ -9,6 +8,77 @@ import Icon from '@/components/Icons';
 import { getProducts } from '@/lib/api';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
 import { Product } from '@/types';
+
+const CATEGORY_SHOWCASE = [
+  {
+    name: 'Proteína',
+    art: '/art/cat-proteina.svg',
+    tagline: 'Aislados y concentrados',
+    copy: 'Complementa tu ingesta diaria con fórmulas de alta solubilidad.',
+  },
+  {
+    name: 'Rendimiento',
+    art: '/art/cat-rendimiento.svg',
+    tagline: 'Fuerza y energía',
+    copy: 'Creatina, pre-entrenos y esenciales para tus sesiones intensas.',
+  },
+  {
+    name: 'Volumen',
+    art: '/art/cat-volumen.svg',
+    tagline: 'Ganancia calórica',
+    copy: 'Mezclas balanceadas para sumar calorías de forma práctica.',
+  },
+  {
+    name: 'Bienestar',
+    art: '/art/cat-bienestar.svg',
+    tagline: 'Salud integral',
+    copy: 'Vitaminas y apoyos diarios para acompañar tu estilo de vida.',
+  },
+];
+
+const BENEFITS = [
+  { icon: 'award', title: 'Selección curada', text: 'Cada producto se elige por su calidad, pureza y respaldo de fabricante.' },
+  { icon: 'message', title: 'Asesoría real', text: 'Un asesor revisa tu solicitud y resuelve tus dudas antes de confirmar.' },
+  { icon: 'shield', title: 'Compra segura', text: 'Sin cobros automáticos: confirmas stock y detalles antes de pagar.' },
+  { icon: 'truck', title: 'Entrega coordinada', text: 'Validamos ubicación y método de envío contigo, paso a paso.' },
+  { icon: 'droplet', title: 'Info transparente', text: 'Ingredientes, modo de uso y presentación siempre a la vista.' },
+  { icon: 'whatsapp', title: 'Contacto directo', text: 'Recibes confirmación y seguimiento cómodamente por WhatsApp.' },
+] as const;
+
+const STATS = [
+  { icon: 'users', value: '1.2K+', label: 'Clientes acompañados' },
+  { icon: 'package', value: '40+', label: 'Referencias en catálogo' },
+  { icon: 'star', value: '4.9', label: 'Valoración promedio' },
+  { icon: 'refresh', value: '24 h', label: 'Respuesta típica' },
+] as const;
+
+const TESTIMONIALS = [
+  {
+    avatar: '/art/avatar-1.svg',
+    name: 'María G.',
+    role: 'Rutina de fuerza',
+    quote: 'Me ayudaron a elegir la proteína correcta y confirmaron todo antes de pagar. La atención marcó la diferencia.',
+  },
+  {
+    avatar: '/art/avatar-2.svg',
+    name: 'Carlos M.',
+    role: 'Cliente frecuente',
+    quote: 'El catálogo tiene toda la información que necesito. Pedir es rápido y siempre recibo seguimiento por WhatsApp.',
+  },
+  {
+    avatar: '/art/avatar-3.svg',
+    name: 'Lucía R.',
+    role: 'Primera compra',
+    quote: 'Tenía dudas sobre qué me convenía y me guiaron con paciencia. Producto original y entrega coordinada sin sorpresas.',
+  },
+];
+
+const FAQ = [
+  { q: '¿Cómo realizo un pedido?', a: 'Explora el catálogo, entra al producto que te interesa y envía una solicitud con tus datos esenciales. Nuestro equipo la recibe y te contacta para confirmar.' },
+  { q: '¿Debo pagar al momento de solicitar?', a: 'No. Primero confirmamos disponibilidad y los detalles de entrega contigo. El pago se coordina una vez que todo está claro.' },
+  { q: '¿Los precios están en dólares?', a: 'Sí, todos los precios del catálogo se muestran en USD para mayor claridad.' },
+  { q: '¿Cómo recibo mi confirmación?', a: 'Te contactamos por WhatsApp con la información preparada: stock, total y método de entrega acordado.' },
+];
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,6 +111,11 @@ export default function HomePage() {
     return ['Todos', ...Array.from(values)];
   }, [products]);
 
+  const featured = useMemo(
+    () => products.filter((product) => product.destacado).slice(0, 3),
+    [products]
+  );
+
   const filteredProducts = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -56,171 +131,205 @@ export default function HomePage() {
     });
   }, [products, filter, search]);
 
-  const visualProducts = products.length > 0 ? products : FALLBACK_PRODUCTS;
-  const getVisualProduct = (index: number) => visualProducts[index % visualProducts.length];
-  const featuredProducts = visualProducts.filter((product) => product.destacado);
-  const editorialProducts = (featuredProducts.length > 0 ? featuredProducts : visualProducts).slice(0, 3);
-  const categoryCards = categories
-    .filter((category) => category !== 'Todos')
-    .map((category) => ({
-      category,
-      product: visualProducts.find((product) => product.categoria === category),
-    }))
-    .filter((item): item is { category: string; product: Product } => Boolean(item.product))
-    .slice(0, 4);
+  const goToCategory = (category: string) => {
+    setFilter(category);
+    setSearch('');
+    if (typeof document !== 'undefined') {
+      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <>
       <Navbar />
       <main>
-        <section className="hero hero-redesign" id="inicio">
+        {/* ============ HERO ============ */}
+        <section className="hero" id="inicio">
           <div className="hero-orb hero-orb-one" />
           <div className="hero-orb hero-orb-two" />
-          <div className="container hero-grid hero-grid-redesign">
-            <div className="hero-content hero-content-redesign">
+          <div className="container hero-grid">
+            <div className="hero-content">
               <span className="hero-badge">
-                <Icon name="sparkles" size={15} /> Bienestar y rendimiento, mejor presentados
+                <Icon name="sparkles" size={15} /> Selección premium de suplementos
               </span>
               <h1>
-                Eleva tu rutina con una selección que <em>se siente premium.</em>
+                Tu progreso merece una elección <em>más inteligente.</em>
               </h1>
               <p>
-                Explora suplementos organizados con claridad, imágenes protagonistas y
-                una experiencia de compra acompañada de principio a fin.
+                Descubre productos cuidadosamente seleccionados y recibe atención
+                personalizada para construir un pedido alineado con tus objetivos.
               </p>
               <div className="hero-actions">
                 <a href="#catalogo" className="btn btn-primary btn-lg">
                   Explorar catálogo <Icon name="arrowRight" size={18} />
                 </a>
-                <a href="#colecciones" className="btn btn-outline btn-lg">
-                  Descubrir colecciones
+                <a href="#asesoria" className="btn btn-outline btn-lg">
+                  Conocer la experiencia
                 </a>
               </div>
 
-              <div className="hero-feature-grid">
-                <article>
-                  <span><Icon name="shield" size={18} /></span>
-                  <div><strong>Selección cuidada</strong><small>Información clara y completa</small></div>
-                </article>
-                <article>
-                  <span><Icon name="message" size={18} /></span>
-                  <div><strong>Compra guiada</strong><small>Confirmación personalizada</small></div>
-                </article>
-                <article>
-                  <span><Icon name="truck" size={18} /></span>
-                  <div><strong>Entrega coordinada</strong><small>Cada detalle se valida contigo</small></div>
-                </article>
-              </div>
-            </div>
-
-            <div className="hero-product-stage" aria-label="Selección GutiSupplements">
-              <div className="hero-stage-frame hero-stage-main">
-                <img src={getVisualProduct(0).imagen} alt={getVisualProduct(0).nombre} />
-                <div className="hero-stage-overlay">
-                  <span>{getVisualProduct(0).categoria}</span>
-                  <strong>{getVisualProduct(0).nombre}</strong>
-                  <small>${getVisualProduct(0).precio.toFixed(2)} USD</small>
+              <div className="hero-rating">
+                <div className="hero-stars" aria-hidden="true">
+                  <Icon name="star" size={16} /><Icon name="star" size={16} />
+                  <Icon name="star" size={16} /><Icon name="star" size={16} />
+                  <Icon name="star" size={16} />
                 </div>
+                <span><strong>4.9/5</strong> · +1.200 clientes acompañados</span>
               </div>
-              <div className="hero-stage-frame hero-stage-top">
-                <img src={getVisualProduct(1).imagen} alt={getVisualProduct(1).nombre} />
+
+              <div className="hero-trust-row">
+                <span><Icon name="shield" size={18} /> Atención segura</span>
+                <span><Icon name="message" size={18} /> Confirmación personal</span>
+                <span><Icon name="dollar" size={18} /> Precios en USD</span>
               </div>
-              <div className="hero-stage-frame hero-stage-bottom">
-                <img src={getVisualProduct(2).imagen} alt={getVisualProduct(2).nombre} />
+            </div>
+
+            <div className="hero-visual" aria-label="GutiSupplements">
+              <div className="hero-stage">
+                <img className="hero-jar" src="/art/hero-jar.svg" alt="Envase premium GutiSupplements" />
+                <img className="hero-float-shaker" src="/art/shaker.svg" alt="" />
+                <img className="hero-float-caps" src="/art/capsules.svg" alt="" />
+                <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
-              <div className="hero-stage-brand">
-                <img src="/guti-logo.png" alt="GutiSupplements" />
+              <div className="floating-card floating-card-top">
+                <span className="floating-icon"><Icon name="shield" size={19} /></span>
+                <div><strong>Compra acompañada</strong><small>Confirmamos cada detalle</small></div>
               </div>
-              <div className="hero-stage-note hero-stage-note-top">
-                <Icon name="sparkles" size={16} />
-                <span><strong>Curado para ti</strong><small>Una vitrina más visual</small></span>
-              </div>
-              <div className="hero-stage-note hero-stage-note-bottom">
-                <Icon name="package" size={16} />
-                <span><strong>{visualProducts.length} productos</strong><small>Listos para explorar</small></span>
+              <div className="floating-card floating-card-bottom">
+                <span className="floating-icon"><Icon name="package" size={19} /></span>
+                <div><strong>Catálogo curado</strong><small>Información amplia y clara</small></div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section className="brand-marquee" aria-label="Valores de GutiSupplements">
-          <div className="brand-marquee-track">
-            <span>Performance</span><b>✦</b><span>Wellness</span><b>✦</b>
-            <span>Calidad visual</span><b>✦</b><span>Compra acompañada</span><b>✦</b>
-            <span>Información clara</span><b>✦</b><span>Selección premium</span><b>✦</b>
-          </div>
-        </section>
-
-        <section className="section collection-section" id="colecciones">
-          <div className="container">
-            <div className="section-heading collection-heading">
-              <div>
-                <span className="eyebrow">Explora de otra manera</span>
-                <h2>Una vitrina diseñada para inspirar tu próxima elección</h2>
-                <p>
-                  Descubre productos destacados, categorías y presentaciones en una
-                  composición más rica, dinámica y fácil de recorrer.
-                </p>
-              </div>
-              <a href="#catalogo" className="text-link">
-                Ver colección completa <Icon name="arrowRight" size={17} />
-              </a>
-            </div>
-
-            <div className="editorial-grid">
-              {editorialProducts.map((product, index) => (
-                <Link
-                  href={`/producto/${encodeURIComponent(product.id)}`}
-                  className={`editorial-card editorial-card-${index + 1}`}
-                  key={product.id}
-                >
-                  <img src={product.imagen} alt={product.nombre} />
-                  <div className="editorial-shade" />
-                  <span className="editorial-index">0{index + 1}</span>
-                  <div className="editorial-copy">
-                    <small>{product.categoria}</small>
-                    <strong>{product.nombre}</strong>
-                    <span>Conocer producto <Icon name="arrowRight" size={15} /></span>
-                  </div>
-                </Link>
+          <div className="hero-marquee" aria-hidden="true">
+            <div className="hero-marquee-track">
+              {[0, 1].map((dup) => (
+                <div className="hero-marquee-group" key={dup}>
+                  <span><Icon name="award" size={15} /> Calidad garantizada</span>
+                  <span><Icon name="truck" size={15} /> Entrega coordinada</span>
+                  <span><Icon name="whatsapp" size={15} /> Soporte por WhatsApp</span>
+                  <span><Icon name="shield" size={15} /> Pago sólo al confirmar</span>
+                  <span><Icon name="sparkles" size={15} /> Productos originales</span>
+                  <span><Icon name="dollar" size={15} /> Precios claros en USD</span>
+                </div>
               ))}
             </div>
-
-            {categoryCards.length > 0 && (
-              <div className="category-showcase">
-                {categoryCards.map(({ category, product }) => (
-                  <button
-                    key={category}
-                    className="category-visual-card"
-                    onClick={() => {
-                      setFilter(category);
-                      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                  >
-                    <img src={product.imagen} alt="" />
-                    <span className="category-visual-shade" />
-                    <span className="category-visual-copy">
-                      <small>Explorar categoría</small>
-                      <strong>{category}</strong>
-                    </span>
-                    <span className="category-visual-arrow"><Icon name="arrowRight" size={17} /></span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </section>
 
-        <section className="section catalog-section catalog-section-redesign" id="catalogo">
-          <div className="catalog-backdrop-word" aria-hidden="true">GUTI</div>
+        {/* ============ TRUST STRIP ============ */}
+        <section className="trust-strip" id="experiencia">
+          <div className="container trust-strip-grid">
+            <article>
+              <span><Icon name="shield" size={23} /></span>
+              <div><strong>Selección responsable</strong><p>Información transparente para elegir con mayor confianza.</p></div>
+            </article>
+            <article>
+              <span><Icon name="message" size={23} /></span>
+              <div><strong>Atención personalizada</strong><p>Un asesor revisa tu solicitud antes de confirmar la compra.</p></div>
+            </article>
+            <article>
+              <span><Icon name="truck" size={23} /></span>
+              <div><strong>Entrega coordinada</strong><p>Disponibilidad, ubicación y método de envío se validan contigo.</p></div>
+            </article>
+          </div>
+        </section>
+
+        {/* ============ CATEGORIES ============ */}
+        <section className="section categories-section">
           <div className="container">
-            <div className="section-heading catalog-heading-redesign">
+            <div className="section-heading center">
               <div>
-                <span className="eyebrow">Colección GutiSupplements</span>
+                <span className="eyebrow"><Icon name="layers" size={13} /> Explora por objetivo</span>
+                <h2>Categorías pensadas para ti</h2>
+                <p>Elige el camino que se ajusta a tu meta y descubre los productos disponibles en cada línea.</p>
+              </div>
+            </div>
+            <div className="category-grid">
+              {CATEGORY_SHOWCASE.map((category) => (
+                <button
+                  key={category.name}
+                  type="button"
+                  className="category-card"
+                  onClick={() => goToCategory(category.name)}
+                >
+                  <div className="category-art">
+                    <img src={category.art} alt={category.name} loading="lazy" />
+                    <span className="category-tagline">{category.tagline}</span>
+                  </div>
+                  <div className="category-body">
+                    <h3>{category.name}</h3>
+                    <p>{category.copy}</p>
+                    <span className="category-link">Ver productos <Icon name="arrowRight" size={15} /></span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ FEATURE BANNER ============ */}
+        <section className="section feature-section">
+          <div className="container feature-grid">
+            <div className="feature-visual">
+              <img src="/art/feature-lab.svg" alt="Estándares de calidad GutiSupplements" />
+              <div className="feature-visual-badge">
+                <Icon name="award" size={18} />
+                <div><strong>Estándar premium</strong><small>Cada lote, verificado</small></div>
+              </div>
+            </div>
+            <div className="feature-content">
+              <span className="eyebrow"><Icon name="target" size={13} /> Por qué GutiSupplements</span>
+              <h2>Calidad que puedes revisar antes de decidir.</h2>
+              <p>
+                No vendemos por vender. Reunimos información clara de cada producto —presentación,
+                ingredientes y modo de uso— para que elijas con criterio y con acompañamiento humano.
+              </p>
+              <div className="feature-list">
+                <div><span className="feature-check"><Icon name="check" size={15} /></span> Fórmulas seleccionadas por pureza y respaldo</div>
+                <div><span className="feature-check"><Icon name="check" size={15} /></span> Fichas completas: qué es, para qué y cómo usarlo</div>
+                <div><span className="feature-check"><Icon name="check" size={15} /></span> Confirmación de stock antes de cualquier pago</div>
+                <div><span className="feature-check"><Icon name="check" size={15} /></span> Comunicación directa, organizada y sin presiones</div>
+              </div>
+              <a href="#catalogo" className="btn btn-primary btn-lg">
+                Ver el catálogo <Icon name="arrowRight" size={18} />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ============ FEATURED PRODUCTS ============ */}
+        {featured.length > 0 && (
+          <section className="section featured-section">
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <span className="eyebrow"><Icon name="flame" size={13} /> Los más buscados</span>
+                  <h2>Destacados de la temporada</h2>
+                  <p>Una muestra de los favoritos de nuestros clientes, listos para solicitar.</p>
+                </div>
+                <a href="#catalogo" className="btn btn-outline">Ver todo el catálogo <Icon name="arrowRight" size={16} /></a>
+              </div>
+              <div className="grid-products featured-grid">
+                {featured.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ============ CATALOG ============ */}
+        <section className="section catalog-section" id="catalogo">
+          <div className="container">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow"><Icon name="products" size={13} /> Colección GutiSupplements</span>
                 <h2>Encuentra tu próximo aliado</h2>
                 <p>
-                  Consulta descripción, presentación, precio y disponibilidad antes de
-                  enviar tu solicitud directa.
+                  Entra en cada producto para consultar su descripción, presentación,
+                  precio y disponibilidad antes de enviar una solicitud directa.
                 </p>
               </div>
               <div className="catalog-search">
@@ -234,7 +343,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="catalog-toolbar catalog-toolbar-redesign">
+            <div className="catalog-toolbar">
               <div className="filters" aria-label="Filtrar por categoría">
                 {categories.map((category) => (
                   <button
@@ -254,7 +363,7 @@ export default function HomePage() {
             {loading ? (
               <Loader label="Preparando el catálogo..." />
             ) : filteredProducts.length > 0 ? (
-              <div className="grid-products grid-products-redesign">
+              <div className="grid-products">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -272,127 +381,198 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section experience-gallery-section" id="experiencia">
-          <div className="container experience-gallery-grid">
-            <div className="experience-collage">
-              <div className="experience-image experience-image-large">
-                <img src={getVisualProduct(1).imagen} alt={getVisualProduct(1).nombre} />
+        {/* ============ STATS BAND ============ */}
+        <section className="stats-band">
+          <div className="stats-band-art" aria-hidden="true">
+            <img src="/art/molecule.svg" alt="" />
+          </div>
+          <div className="container stats-grid">
+            {STATS.map((stat) => (
+              <article key={stat.label}>
+                <span className="stats-icon"><Icon name={stat.icon} size={22} /></span>
+                <strong>{stat.value}</strong>
+                <small>{stat.label}</small>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ BENEFITS ============ */}
+        <section className="section benefits-section">
+          <div className="container">
+            <div className="section-heading center">
+              <div>
+                <span className="eyebrow"><Icon name="heart" size={13} /> Nuestra promesa</span>
+                <h2>Todo lo que hace distinta tu compra</h2>
+                <p>Una experiencia construida alrededor de la claridad, la calidad y el acompañamiento.</p>
               </div>
-              <div className="experience-image experience-image-small">
-                <img src={getVisualProduct(2).imagen} alt={getVisualProduct(2).nombre} />
+            </div>
+            <div className="benefits-grid">
+              {BENEFITS.map((benefit) => (
+                <article className="benefit-card" key={benefit.title}>
+                  <span className="benefit-icon"><Icon name={benefit.icon} size={22} /></span>
+                  <h3>{benefit.title}</h3>
+                  <p>{benefit.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ TESTIMONIALS ============ */}
+        <section className="section testimonials-section">
+          <div className="container">
+            <div className="section-heading center">
+              <div>
+                <span className="eyebrow"><Icon name="quote" size={13} /> Voces reales</span>
+                <h2>Lo que dicen quienes ya nos eligieron</h2>
+                <p>Historias de clientes que encontraron acompañamiento además de un buen producto.</p>
               </div>
-              <div className="experience-logo-card">
-                <img src="/guti-logo.png" alt="" />
-                <span>GutiSupplements</span>
-                <small>Performance · Wellness</small>
-              </div>
-              <div className="experience-number-card">
-                <strong>01</strong>
-                <span>Explora con calma</span>
+            </div>
+            <div className="testimonials-grid">
+              {TESTIMONIALS.map((testimonial) => (
+                <article className="testimonial-card" key={testimonial.name}>
+                  <span className="testimonial-quote-mark"><Icon name="quote" size={26} /></span>
+                  <div className="testimonial-stars" aria-hidden="true">
+                    {[0, 1, 2, 3, 4].map((star) => (
+                      <Icon key={star} name="star" size={15} />
+                    ))}
+                  </div>
+                  <p>{testimonial.quote}</p>
+                  <div className="testimonial-author">
+                    <img src={testimonial.avatar} alt="" />
+                    <div>
+                      <strong>{testimonial.name}</strong>
+                      <small>{testimonial.role}</small>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ ADVISORY ============ */}
+        <section className="section advisory-section" id="asesoria">
+          <div className="container advisory-grid">
+            <div className="advisory-visual">
+              <div className="advisory-monogram">GS</div>
+              <img className="advisory-scoop" src="/art/scoop.svg" alt="" aria-hidden="true" />
+              <div className="advisory-card">
+                <span className="eyebrow">Proceso claro</span>
+                <strong>De la selección a la confirmación</strong>
+                <ol>
+                  <li><span>1</span> Explora la información completa.</li>
+                  <li><span>2</span> Selecciona el producto que deseas solicitar.</li>
+                  <li><span>3</span> Completa un formulario breve con tus datos esenciales.</li>
+                  <li><span>4</span> Recibe confirmación por WhatsApp.</li>
+                </ol>
               </div>
             </div>
 
-            <div className="experience-content">
-              <span className="eyebrow">Más claridad, más confianza</span>
-              <h2>Una experiencia que te muestra todo antes de solicitar.</h2>
+            <div className="advisory-content">
+              <span className="eyebrow"><Icon name="message" size={13} /> Una experiencia más humana</span>
+              <h2>No solo compras un producto. Recibes acompañamiento.</h2>
               <p>
-                Cada ficha está pensada para ayudarte a comparar, entender la presentación
-                y revisar la disponibilidad sin perderte entre pantallas vacías o información dispersa.
+                Cada solicitud llega directamente al panel de GutiSupplements.
+                El equipo recibe el producto solicitado y tus datos esenciales de entrega
+                para contactarte con toda la información preparada.
               </p>
-              <div className="experience-list">
-                <article>
-                  <span>01</span>
-                  <div><strong>Información visual</strong><p>Imágenes amplias, categorías claras y datos esenciales a la vista.</p></div>
-                </article>
-                <article>
-                  <span>02</span>
-                  <div><strong>Solicitud directa</strong><p>Elige tu producto y completa únicamente los datos necesarios.</p></div>
-                </article>
-                <article>
-                  <span>03</span>
-                  <div><strong>Confirmación humana</strong><p>El equipo valida stock, entrega y método de pago contigo.</p></div>
-                </article>
+              <div className="advisory-points">
+                <div><Icon name="check" size={17} /><span>Sin cobros automáticos inesperados.</span></div>
+                <div><Icon name="check" size={17} /><span>Confirmación de stock antes del pago.</span></div>
+                <div><Icon name="check" size={17} /><span>Comunicación directa y organizada.</span></div>
               </div>
               <a href="#catalogo" className="btn btn-primary">
-                Empezar a explorar <Icon name="arrowRight" size={18} />
+                Explorar productos <Icon name="arrowRight" size={18} />
               </a>
             </div>
           </div>
         </section>
 
-        <section className="section process-section" id="asesoria">
-          <div className="container">
-            <div className="process-header">
-              <div>
-                <span className="eyebrow">Tu compra, paso a paso</span>
-                <h2>Un proceso simple con una presentación extraordinaria.</h2>
-              </div>
-              <p>
-                Sin cobros automáticos inesperados. Tú eliges, envías la solicitud y recibes
-                la confirmación con toda la información organizada.
-              </p>
+        {/* ============ FAQ ============ */}
+        <section className="section faq-section">
+          <div className="container faq-grid">
+            <div className="faq-intro">
+              <span className="eyebrow"><Icon name="message" size={13} /> Preguntas frecuentes</span>
+              <h2>Resolvemos tus dudas antes de empezar</h2>
+              <p>Si algo no aparece aquí, escríbenos por WhatsApp y te ayudamos personalmente.</p>
+              <a href="#catalogo" className="btn btn-outline">Ir al catálogo <Icon name="arrowRight" size={16} /></a>
             </div>
-
-            <div className="process-grid">
-              <article>
-                <div className="process-card-top"><span>01</span><Icon name="search" size={24} /></div>
-                <h3>Descubre</h3>
-                <p>Explora el catálogo y abre la ficha completa del producto que te interesa.</p>
-              </article>
-              <article>
-                <div className="process-card-top"><span>02</span><Icon name="products" size={24} /></div>
-                <h3>Selecciona</h3>
-                <p>Revisa presentación, precio y disponibilidad antes de continuar.</p>
-              </article>
-              <article>
-                <div className="process-card-top"><span>03</span><Icon name="message" size={24} /></div>
-                <h3>Solicita</h3>
-                <p>Completa el formulario breve con tus datos esenciales de entrega.</p>
-              </article>
-              <article>
-                <div className="process-card-top"><span>04</span><Icon name="check" size={24} /></div>
-                <h3>Confirma</h3>
-                <p>Recibe atención por WhatsApp y coordina cada detalle de tu pedido.</p>
-              </article>
+            <div className="faq-list">
+              {FAQ.map((item, index) => (
+                <details className="faq-item" key={item.q} open={index === 0}>
+                  <summary>
+                    <span>{item.q}</span>
+                    <span className="faq-toggle"><Icon name="chevronDown" size={18} /></span>
+                  </summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
             </div>
+          </div>
+        </section>
 
-            <div className="process-cta-card">
-              <div className="process-cta-images">
-                {[0, 1, 2].map((index) => (
-                  <img key={index} src={getVisualProduct(index).imagen} alt="" />
-                ))}
-              </div>
-              <div>
-                <small>Todo comienza con una buena elección</small>
-                <strong>Tu próxima rutina puede empezar aquí.</strong>
-              </div>
-              <a href="#catalogo" className="btn btn-primary">
-                Ver productos <Icon name="arrowRight" size={17} />
-              </a>
+        {/* ============ CTA BAND ============ */}
+        <section className="cta-band">
+          <div className="cta-band-orb cta-orb-one" />
+          <div className="cta-band-orb cta-orb-two" />
+          <img className="cta-band-molecule" src="/art/molecule.svg" alt="" aria-hidden="true" />
+          <div className="container cta-band-inner">
+            <span className="eyebrow"><Icon name="sparkles" size={13} /> Da el primer paso</span>
+            <h2>¿Listo para elegir tu próximo suplemento?</h2>
+            <p>Explora el catálogo, envía tu solicitud y deja que nuestro equipo se encargue del resto.</p>
+            <div className="cta-band-actions">
+              <a href="#catalogo" className="btn btn-primary btn-lg">Explorar catálogo <Icon name="arrowRight" size={18} /></a>
+              <a href="#asesoria" className="btn btn-ghost-light btn-lg">Cómo funciona</a>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="footer footer-redesign">
-        <div className="container footer-showcase">
-          <div className="footer-brand-large">
-            <img src="/guti-logo.png" alt="GutiSupplements" />
-            <div>
-              <span className="eyebrow">Performance · Wellness</span>
-              <strong>GutiSupplements</strong>
-              <p>Una selección premium, una experiencia clara y una atención más humana.</p>
+      {/* ============ FOOTER ============ */}
+      <footer className="footer">
+        <div className="container footer-top">
+          <div className="footer-about">
+            <div className="footer-brand">
+              <img src="/guti-logo.png" alt="" />
+              <div><strong>GutiSupplements</strong><p>Performance · Wellness · Atención personalizada</p></div>
+            </div>
+            <p className="footer-about-text">
+              Suplementos seleccionados con criterio y una experiencia de compra acompañada
+              de principio a fin. Tu progreso, con mejor información.
+            </p>
+            <div className="footer-social">
+              <a href="#inicio" aria-label="Instagram"><Icon name="instagram" size={18} /></a>
+              <a href="#inicio" aria-label="Facebook"><Icon name="facebook" size={18} /></a>
+              <a href="#inicio" aria-label="WhatsApp"><Icon name="whatsapp" size={18} /></a>
             </div>
           </div>
-          <div className="footer-navigation">
-            <div><small>Explorar</small><a href="#catalogo">Catálogo</a><a href="#colecciones">Colecciones</a></div>
-            <div><small>Experiencia</small><a href="#experiencia">Cómo funciona</a><a href="#asesoria">Proceso de compra</a></div>
-            <div><small>Gestión</small><a href="/admin">Administración</a><a href="#inicio">Volver arriba</a></div>
+
+          <div className="footer-col">
+            <h4>Tienda</h4>
+            <a href="#catalogo">Catálogo completo</a>
+            <a href="#catalogo">Destacados</a>
+            <a href="#catalogo">Categorías</a>
+          </div>
+
+          <div className="footer-col">
+            <h4>Experiencia</h4>
+            <a href="#experiencia">Cómo compramos</a>
+            <a href="#asesoria">Asesoría</a>
+            <a href="#faq">Preguntas frecuentes</a>
+          </div>
+
+          <div className="footer-col">
+            <h4>Contacto</h4>
+            <span className="footer-contact"><Icon name="whatsapp" size={16} /> Soporte por WhatsApp</span>
+            <span className="footer-contact"><Icon name="mail" size={16} /> Atención personalizada</span>
+            <a href="/admin" className="footer-admin-link"><Icon name="lock" size={15} /> Administración</a>
           </div>
         </div>
         <div className="container footer-bottom">
           <p>© {new Date().getFullYear()} GutiSupplements. Todos los derechos reservados.</p>
-          <span>Diseñado para una experiencia de compra más completa.</span>
+          <p className="footer-bottom-tag">Hecho con dedicación para tu bienestar.</p>
         </div>
       </footer>
     </>

@@ -16,7 +16,6 @@ import {
   updateProduct,
 } from '@/lib/api';
 import { OrderRecord, Product } from '@/types';
-import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
 
 const AUTH_KEY = 'guti-supplements-admin-auth';
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
@@ -134,62 +133,56 @@ export default function AdminPage() {
     const activeOrders = orders.filter((order) => order.estado !== 'Cancelado');
     const requestedValue = activeOrders.reduce((sum, order) => sum + order.total, 0);
     const lowStock = products.filter((product) => product.stock <= 5).length;
-    return { pending, requestedValue, lowStock };
+    return { pending, requestedValue, lowStock, totalOrders: orders.length };
   }, [orders, products]);
-
-  const visualProducts = products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   if (!authenticated) {
     return (
-      <main className="admin-login-page admin-login-redesign">
+      <main className="admin-login-page">
         <div className="admin-login-decoration" />
-        <section className="admin-login-showcase">
-          <div className="admin-login-showcase-copy">
-            <div className="admin-login-showcase-brand"><BrandLogo /></div>
-            <span className="eyebrow">Centro de operaciones</span>
-            <h2>Todo tu catálogo y tus pedidos, en una experiencia más visual.</h2>
-            <p>Un espacio organizado para revisar solicitudes, controlar inventario y mantener la tienda siempre lista.</p>
-          </div>
-          <div className="admin-login-mosaic">
-            {FALLBACK_PRODUCTS.slice(0, 3).map((product, index) => (
-              <div className={`admin-login-mosaic-card admin-login-mosaic-card-${index + 1}`} key={product.id}>
-                <img src={product.imagen} alt="" />
-                <span>{product.categoria}</span>
+        <section className="admin-login-shell">
+          <aside className="admin-login-aside">
+            <div className="admin-login-aside-glow" />
+            <div className="admin-login-aside-top">
+              <span className="admin-login-chip"><Icon name="lock" size={14} /> Área privada</span>
+              <h2>Gestiona tu tienda desde un solo lugar.</h2>
+              <p>Controla pedidos, inventario y catálogo con una vista clara y ordenada.</p>
+            </div>
+            <img className="admin-login-illustration" src="/art/admin-panel.svg" alt="Panel de gestión" />
+            <ul className="admin-login-highlights">
+              <li><Icon name="orders" size={16} /> Seguimiento de pedidos en tiempo real</li>
+              <li><Icon name="products" size={16} /> Alta y edición de productos</li>
+              <li><Icon name="barChart" size={16} /> Indicadores clave a la vista</li>
+            </ul>
+          </aside>
+
+          <div className="admin-login-card">
+            <div className="admin-login-brand"><BrandLogo /></div>
+            <span className="admin-login-icon"><Icon name="lock" size={24} /></span>
+            <span className="eyebrow">Panel administrativo</span>
+            <h1>Bienvenido de nuevo</h1>
+            <p>Ingresa tu contraseña para acceder a la gestión de GutiSupplements.</p>
+
+            {authError && <div className="alert alert-error">{authError}</div>}
+
+            <form onSubmit={handleLogin}>
+              <div className="field">
+                <label htmlFor="admin-password">Contraseña</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  placeholder="Ingresa tu contraseña"
+                  value={passwordInput}
+                  onChange={(event) => setPasswordInput(event.target.value)}
+                  autoFocus
+                />
               </div>
-            ))}
-            <div className="admin-login-system-card">
-              <span className="admin-live-dot" />
-              <div><strong>Panel centralizado</strong><small>Pedidos · Productos · Inventario</small></div>
-            </div>
+              <button type="submit" className="btn btn-primary btn-block btn-lg">
+                Entrar al panel <Icon name="arrowRight" size={18} />
+              </button>
+            </form>
+            <a href="/" className="admin-back-store"><Icon name="chevronLeft" size={16} /> Volver a la tienda</a>
           </div>
-        </section>
-
-        <section className="admin-login-card">
-          <div className="admin-login-brand"><BrandLogo /></div>
-          <span className="admin-login-icon"><Icon name="lock" size={26} /></span>
-          <span className="eyebrow">Área privada</span>
-          <h1>Panel administrativo</h1>
-          <p>Ingresa para gestionar productos, inventario y pedidos desde un solo lugar.</p>
-
-          {authError && <div className="alert alert-error">{authError}</div>}
-
-          <form onSubmit={handleLogin}>
-            <div className="field">
-              <label htmlFor="admin-password">Contraseña</label>
-              <input
-                id="admin-password"
-                type="password"
-                placeholder="Ingresa tu contraseña"
-                value={passwordInput}
-                onChange={(event) => setPasswordInput(event.target.value)}
-                autoFocus
-              />
-            </div>
-            <button type="submit" className="btn btn-primary btn-block btn-lg">
-              Entrar al panel <Icon name="arrowRight" size={18} />
-            </button>
-          </form>
-          <a href="/" className="admin-back-store"><Icon name="chevronLeft" size={16} /> Volver a la tienda</a>
         </section>
       </main>
     );
@@ -199,10 +192,6 @@ export default function AdminPage() {
     <div className="admin-app-shell">
       <aside className="admin-sidebar">
         <a href="/" className="admin-sidebar-brand"><BrandLogo /></a>
-        <div className="admin-sidebar-profile">
-          <span>GS</span>
-          <div><strong>Panel principal</strong><small>Gestión de tienda</small></div>
-        </div>
         <div className="admin-nav-label">Gestión</div>
         <nav className="admin-nav">
           <button className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}>
@@ -217,9 +206,10 @@ export default function AdminPage() {
           </button>
         </nav>
 
-        <div className="admin-sidebar-status">
-          <span className="admin-live-dot" />
-          <div><strong>Sistema conectado</strong><small>Panel listo para operar</small></div>
+        <div className="admin-sidebar-card">
+          <span className="admin-sidebar-card-icon"><Icon name="sparkles" size={18} /></span>
+          <strong>Tienda activa</strong>
+          <p>Tu catálogo está publicado y recibiendo solicitudes.</p>
         </div>
 
         <div className="admin-sidebar-footer">
@@ -244,43 +234,13 @@ export default function AdminPage() {
           </div>
           <div className="admin-topbar-actions">
             <button className="btn btn-outline btn-sm" onClick={() => activeTab === 'orders' ? void loadOrders() : void loadProducts()}>
-              Actualizar
+              <Icon name="refresh" size={15} /> Actualizar
             </button>
             <a href="/" className="btn btn-primary btn-sm"><Icon name="store" size={16} /> Ver tienda</a>
           </div>
         </header>
 
         <div className="admin-content">
-          <section className="admin-overview-banner">
-            <div className="admin-overview-copy">
-              <span className="eyebrow">Vista general</span>
-              <h2>{activeTab === 'orders' ? 'Tus pedidos, organizados de un vistazo.' : 'Tu catálogo, listo para crecer.'}</h2>
-              <p>
-                {activeTab === 'orders'
-                  ? 'Revisa solicitudes, confirma detalles y actualiza cada etapa desde una vista más clara y visual.'
-                  : 'Crea, edita y controla la disponibilidad de cada producto sin salir del panel.'}
-              </p>
-              <div className="admin-overview-tags">
-                <span><Icon name="check" size={14} /> Información centralizada</span>
-                <span><Icon name="shield" size={14} /> Acceso privado</span>
-                <span><Icon name="clock" size={14} /> Actualización directa</span>
-              </div>
-            </div>
-            <div className="admin-overview-visual">
-              <div className="admin-overview-logo"><img src="/guti-logo.png" alt="" /></div>
-              <div className="admin-overview-thumbnails">
-                {visualProducts.slice(0, 3).map((product) => (
-                  <img key={product.id} src={product.imagen} alt="" />
-                ))}
-              </div>
-              <div className="admin-overview-mini-card">
-                <small>{activeTab === 'orders' ? 'Pendientes' : 'Publicados'}</small>
-                <strong>{activeTab === 'orders' ? stats.pending : products.length}</strong>
-                <span>{activeTab === 'orders' ? 'requieren atención' : 'productos activos'}</span>
-              </div>
-            </div>
-          </section>
-
           {globalError && (
             <div className="alert alert-error admin-global-alert">
               <span>{globalError}</span>
@@ -288,25 +248,31 @@ export default function AdminPage() {
             </div>
           )}
 
-          <div className="admin-section-label-row">
-            <div><span className="eyebrow">Indicadores principales</span><h3>Resumen operativo</h3></div>
-            <span>Datos actuales del panel</span>
-          </div>
+          <section className="admin-welcome">
+            <div className="admin-welcome-copy">
+              <span className="eyebrow"><Icon name="sparkles" size={13} /> Resumen general</span>
+              <h2>{activeTab === 'orders' ? 'Tus pedidos, siempre bajo control' : 'Tu catálogo, siempre ordenado'}</h2>
+              <p>Revisa los indicadores clave y gestiona todo desde un mismo panel.</p>
+            </div>
+            <div className="admin-welcome-art" aria-hidden="true">
+              <Icon name="trending" size={30} />
+            </div>
+          </section>
 
-          <section className="admin-stats-grid admin-stats-grid-redesign">
-            <article>
+          <section className="admin-stats-grid">
+            <article className="admin-stat admin-stat-amber">
               <span className="admin-stat-icon"><Icon name="orders" size={21} /></span>
               <div><small>Pedidos pendientes</small><strong>{stats.pending}</strong><p>Requieren contacto</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-gold">
               <span className="admin-stat-icon"><Icon name="dollar" size={21} /></span>
               <div><small>Valor solicitado</small><strong>${stats.requestedValue.toFixed(2)}</strong><p>USD sin cancelados</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-rose">
               <span className="admin-stat-icon"><Icon name="package" size={21} /></span>
               <div><small>Productos publicados</small><strong>{products.length}</strong><p>Catálogo activo</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-wine">
               <span className="admin-stat-icon"><Icon name="clock" size={21} /></span>
               <div><small>Stock bajo</small><strong>{stats.lowStock}</strong><p>5 unidades o menos</p></div>
             </article>
