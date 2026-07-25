@@ -133,39 +133,56 @@ export default function AdminPage() {
     const activeOrders = orders.filter((order) => order.estado !== 'Cancelado');
     const requestedValue = activeOrders.reduce((sum, order) => sum + order.total, 0);
     const lowStock = products.filter((product) => product.stock <= 5).length;
-    return { pending, requestedValue, lowStock };
+    return { pending, requestedValue, lowStock, totalOrders: orders.length };
   }, [orders, products]);
 
   if (!authenticated) {
     return (
       <main className="admin-login-page">
         <div className="admin-login-decoration" />
-        <section className="admin-login-card">
-          <div className="admin-login-brand"><BrandLogo /></div>
-          <span className="admin-login-icon"><Icon name="lock" size={26} /></span>
-          <span className="eyebrow">Área privada</span>
-          <h1>Panel administrativo</h1>
-          <p>Gestiona productos, inventario y pedidos desde un solo lugar.</p>
-
-          {authError && <div className="alert alert-error">{authError}</div>}
-
-          <form onSubmit={handleLogin}>
-            <div className="field">
-              <label htmlFor="admin-password">Contraseña</label>
-              <input
-                id="admin-password"
-                type="password"
-                placeholder="Ingresa tu contraseña"
-                value={passwordInput}
-                onChange={(event) => setPasswordInput(event.target.value)}
-                autoFocus
-              />
+        <section className="admin-login-shell">
+          <aside className="admin-login-aside">
+            <div className="admin-login-aside-glow" />
+            <div className="admin-login-aside-top">
+              <span className="admin-login-chip"><Icon name="lock" size={14} /> Área privada</span>
+              <h2>Gestiona tu tienda desde un solo lugar.</h2>
+              <p>Controla pedidos, inventario y catálogo con una vista clara y ordenada.</p>
             </div>
-            <button type="submit" className="btn btn-primary btn-block btn-lg">
-              Entrar al panel <Icon name="arrowRight" size={18} />
-            </button>
-          </form>
-          <a href="/" className="admin-back-store"><Icon name="chevronLeft" size={16} /> Volver a la tienda</a>
+            <img className="admin-login-illustration" src="/art/admin-panel.svg" alt="Panel de gestión" />
+            <ul className="admin-login-highlights">
+              <li><Icon name="orders" size={16} /> Seguimiento de pedidos en tiempo real</li>
+              <li><Icon name="products" size={16} /> Alta y edición de productos</li>
+              <li><Icon name="barChart" size={16} /> Indicadores clave a la vista</li>
+            </ul>
+          </aside>
+
+          <div className="admin-login-card">
+            <div className="admin-login-brand"><BrandLogo /></div>
+            <span className="admin-login-icon"><Icon name="lock" size={24} /></span>
+            <span className="eyebrow">Panel administrativo</span>
+            <h1>Bienvenido de nuevo</h1>
+            <p>Ingresa tu contraseña para acceder a la gestión de GutiSupplements.</p>
+
+            {authError && <div className="alert alert-error">{authError}</div>}
+
+            <form onSubmit={handleLogin}>
+              <div className="field">
+                <label htmlFor="admin-password">Contraseña</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  placeholder="Ingresa tu contraseña"
+                  value={passwordInput}
+                  onChange={(event) => setPasswordInput(event.target.value)}
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn btn-primary btn-block btn-lg">
+                Entrar al panel <Icon name="arrowRight" size={18} />
+              </button>
+            </form>
+            <a href="/" className="admin-back-store"><Icon name="chevronLeft" size={16} /> Volver a la tienda</a>
+          </div>
         </section>
       </main>
     );
@@ -189,6 +206,12 @@ export default function AdminPage() {
           </button>
         </nav>
 
+        <div className="admin-sidebar-card">
+          <span className="admin-sidebar-card-icon"><Icon name="sparkles" size={18} /></span>
+          <strong>Tienda activa</strong>
+          <p>Tu catálogo está publicado y recibiendo solicitudes.</p>
+        </div>
+
         <div className="admin-sidebar-footer">
           <a href="/" className="admin-sidebar-link"><Icon name="store" size={18} /> Ver tienda</a>
           <button
@@ -211,7 +234,7 @@ export default function AdminPage() {
           </div>
           <div className="admin-topbar-actions">
             <button className="btn btn-outline btn-sm" onClick={() => activeTab === 'orders' ? void loadOrders() : void loadProducts()}>
-              Actualizar
+              <Icon name="refresh" size={15} /> Actualizar
             </button>
             <a href="/" className="btn btn-primary btn-sm"><Icon name="store" size={16} /> Ver tienda</a>
           </div>
@@ -225,20 +248,31 @@ export default function AdminPage() {
             </div>
           )}
 
+          <section className="admin-welcome">
+            <div className="admin-welcome-copy">
+              <span className="eyebrow"><Icon name="sparkles" size={13} /> Resumen general</span>
+              <h2>{activeTab === 'orders' ? 'Tus pedidos, siempre bajo control' : 'Tu catálogo, siempre ordenado'}</h2>
+              <p>Revisa los indicadores clave y gestiona todo desde un mismo panel.</p>
+            </div>
+            <div className="admin-welcome-art" aria-hidden="true">
+              <Icon name="trending" size={30} />
+            </div>
+          </section>
+
           <section className="admin-stats-grid">
-            <article>
+            <article className="admin-stat admin-stat-amber">
               <span className="admin-stat-icon"><Icon name="orders" size={21} /></span>
               <div><small>Pedidos pendientes</small><strong>{stats.pending}</strong><p>Requieren contacto</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-gold">
               <span className="admin-stat-icon"><Icon name="dollar" size={21} /></span>
               <div><small>Valor solicitado</small><strong>${stats.requestedValue.toFixed(2)}</strong><p>USD sin cancelados</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-rose">
               <span className="admin-stat-icon"><Icon name="package" size={21} /></span>
               <div><small>Productos publicados</small><strong>{products.length}</strong><p>Catálogo activo</p></div>
             </article>
-            <article>
+            <article className="admin-stat admin-stat-wine">
               <span className="admin-stat-icon"><Icon name="clock" size={21} /></span>
               <div><small>Stock bajo</small><strong>{stats.lowStock}</strong><p>5 unidades o menos</p></div>
             </article>
