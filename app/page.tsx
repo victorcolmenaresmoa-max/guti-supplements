@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
+import PromotionsSection from '@/components/PromotionsSection';
 import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
 import { getProducts } from '@/lib/api';
@@ -77,7 +78,7 @@ const TESTIMONIALS = [
 const FAQ = [
   { q: '¿Cómo realizo un pedido?', a: 'Explora el catálogo, entra al producto que te interesa y envía una solicitud con tus datos esenciales. Nuestro equipo la recibe y te contacta para confirmar.' },
   { q: '¿Debo pagar al momento de solicitar?', a: 'No. Primero confirmamos disponibilidad y los detalles de entrega contigo. El pago se coordina una vez que todo está claro.' },
-  { q: '¿Los precios están en dólares?', a: 'Sí, todos los precios del catálogo se muestran en USD para mayor claridad.' },
+  { q: '¿En qué moneda están los precios?', a: 'Los precios se muestran en USD y también en bolívares (Bs) según la tasa vigente. Aceptamos pago en dólares y en bolívares; el método se coordina con tu asesor al confirmar.' },
   { q: '¿Cómo recibo mi confirmación?', a: 'Te contactamos por WhatsApp con la información preparada: stock, total y método de entrega acordado.' },
 ];
 
@@ -181,7 +182,7 @@ export default function HomePage() {
               <div className="hero-trust-row">
                 <span><Icon name="shield" size={18} /> Atención segura</span>
                 <span><Icon name="message" size={18} /> Confirmación personal</span>
-                <span><Icon name="dollar" size={18} /> Precios en USD</span>
+                <span><Icon name="dollar" size={18} /> Precios en USD y Bs</span>
               </div>
             </div>
 
@@ -215,7 +216,7 @@ export default function HomePage() {
                   <span><Icon name="whatsapp" size={15} /> Soporte por WhatsApp</span>
                   <span><Icon name="shield" size={15} /> Pago sólo al confirmar</span>
                   <span><Icon name="sparkles" size={15} /> Productos originales</span>
-                  <span><Icon name="dollar" size={15} /> Precios claros en USD</span>
+                  <span><Icon name="dollar" size={15} /> Precios en USD y Bs</span>
                 </div>
               ))}
             </div>
@@ -333,6 +334,9 @@ export default function HomePage() {
             </div>
           </section>
         )}
+
+        {/* ============ PROMOTIONS ============ */}
+        <PromotionsSection />
 
         {/* ============ CATALOG ============ */}
         <section className="section catalog-section" id="catalogo">

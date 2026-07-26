@@ -1,9 +1,14 @@
+'use client';
+
 import Link from 'next/link';
 import { Product } from '@/types';
 import Icon from './Icons';
+import { useCurrency } from '@/context/CurrencyContext';
+import { formatUSD, formatBs, hasRate } from '@/lib/currency';
 
 export default function ProductCard({ product }: { product: Product }) {
   const productUrl = `/producto/${encodeURIComponent(product.id)}`;
+  const { rate } = useCurrency();
 
   return (
     <article className="product-card">
@@ -32,7 +37,12 @@ export default function ProductCard({ product }: { product: Product }) {
               <h3>{product.nombre}</h3>
               {product.presentacion && <span>{product.presentacion}</span>}
             </div>
-            <div className="product-price">${product.precio.toFixed(2)}</div>
+            <div className="product-price">
+              {formatUSD(product.precio)}
+              {hasRate(rate) && (
+                <span className="product-price-bs">{formatBs(product.precio, rate)}</span>
+              )}
+            </div>
           </div>
 
           <p>{product.descripcion}</p>

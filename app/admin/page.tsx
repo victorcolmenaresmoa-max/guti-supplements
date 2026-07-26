@@ -3,24 +3,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminProductForm from '@/components/AdminProductForm';
 import AdminProductList from '@/components/AdminProductList';
+import AdminPromotionForm from '@/components/AdminPromotionForm';
+import AdminPromotionList from '@/components/AdminPromotionList';
+import AdminRateControl from '@/components/AdminRateControl';
 import AdminOrderList from '@/components/AdminOrderList';
 import BrandLogo from '@/components/BrandLogo';
 import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
 import {
   addProduct,
+  addPromotion,
   deleteProduct,
+  deletePromotion,
+  getConfig,
   getOrders,
   getProducts,
+  getPromotions,
+  updateConfig,
   updateOrderStatus,
   updateProduct,
+  updatePromotion,
 } from '@/lib/api';
-import { OrderRecord, Product } from '@/types';
+import { OrderRecord, Product, Promotion } from '@/types';
 
 const AUTH_KEY = 'guti-supplements-admin-auth';
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
 
-type AdminTab = 'orders' | 'products';
+type AdminTab = 'orders' | 'products' | 'promotions';
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -30,11 +39,17 @@ export default function AdminPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [rate, setRate] = useState(0);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingPromotions, setLoadingPromotions] = useState(true);
   const [loadingForm, setLoadingForm] = useState(false);
+  const [loadingPromoForm, setLoadingPromoForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingPromoId, setDeletingPromoId] = useState<string | null>(null);
   const [changingStatusId, setChangingStatusId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState('');
 
@@ -46,6 +61,8 @@ export default function AdminPage() {
     if (authenticated) {
       void loadProducts();
       void loadOrders();
+      void loadPromotions();
+      void loadConfig();
     }
   }, [authenticated]);
 
@@ -69,6 +86,24 @@ export default function AdminPage() {
       setGlobalError(response.message || 'No se pudieron cargar los pedidos.');
     }
     setLoadingOrders(false);
+  };
+
+  const loadPromotions = async () => {
+    setLoadingPromotions(true);
+    const response = await getPromotions();
+    if (response.ok && response.data) {
+      setPromotions(response.data);
+    } else if (response.message) {
+      setGlobalError(response.message);
+    }
+    setLoadingPromotions(false);
+  };
+
+  const loadConfig = async () => {
+    const response = await getConfig();
+    if (response.ok && response.data) {
+      setRate(Number(response.data.tasaBs) || 0);
+    }
   };
 
   const handleLogin = (event: React.FormEvent) => {
@@ -113,6 +148,46 @@ export default function AdminPage() {
       setGlobalError(response.message || 'No se pudo eliminar el producto.');
     }
     setDeletingId(null);
+  };
+
+  const handleAddOrUpdatePromotion = async (data: Omit<Promotion, 'id'>) => {
+    setLoadingPromoForm(true);
+    setGlobalError('');
+
+    const response = editingPromotion
+      ? await updatePromotion({ ...data, id: editingPromotion.id })
+      : await addPromotion(data);
+
+    if (response.ok) {
+      setEditingPromotion(null);
+      await loadPromotions();
+    } else {
+      setGlobalError(response.message || 'No se pudo guardar la oferta.');
+    }
+    setLoadingPromoForm(false);
+  };
+
+  const handleDeletePromotion = async (id: string) => {
+    if (!window.confirm('¿Deseas eliminar esta oferta de forma permanente?')) return;
+    setDeletingPromoId(id);
+    const response = await deletePromotion(id);
+    if (response.ok) {
+      await loadPromotions();
+    } else {
+      setGlobalError(response.message || 'No se pudo eliminar la oferta.');
+    }
+    setDeletingPromoId(null);
+  };
+
+  const handleSaveRate = async (nextRate: number): Promise<boolean> => {
+    setGlobalError('');
+    const response = await updateConfig({ tasaBs: nextRate });
+    if (response.ok && response.data) {
+      setRate(Number(response.data.tasaBs) || 0);
+      return true;
+    }
+    setGlobalError(response.message || 'No se pudo guardar la tasa de cambio.');
+    return false;
   };
 
   const handleOrderStatus = async (id: string, status: string) => {
@@ -204,6 +279,11 @@ export default function AdminPage() {
             <span>Productos</span>
             <b>{products.length}</b>
           </button>
+          <button className={activeTab === 'promotions' ? 'active' : ''} onClick={() => setActiveTab('promotions')}>
+            <Icon name="tag" size={19} />
+            <span>Ofertas</span>
+            <b>{promotions.length}</b>
+          </button>
         </nav>
 
         <div className="admin-sidebar-card">
@@ -230,10 +310,23 @@ export default function AdminPage() {
         <header className="admin-topbar">
           <div>
             <span className="eyebrow">GutiSupplements Admin</span>
-            <h1>{activeTab === 'orders' ? 'Gestión de pedidos' : 'Gestión del catálogo'}</h1>
+            <h1>
+              {activeTab === 'orders'
+                ? 'Gestión de pedidos'
+                : activeTab === 'promotions'
+                ? 'Gestión de ofertas'
+                : 'Gestión del catálogo'}
+            </h1>
           </div>
           <div className="admin-topbar-actions">
-            <button className="btn btn-outline btn-sm" onClick={() => activeTab === 'orders' ? void loadOrders() : void loadProducts()}>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                if (activeTab === 'orders') void loadOrders();
+                else if (activeTab === 'promotions') void loadPromotions();
+                else void loadProducts();
+              }}
+            >
               <Icon name="refresh" size={15} /> Actualizar
             </button>
             <a href="/" className="btn btn-primary btn-sm"><Icon name="store" size={16} /> Ver tienda</a>
@@ -251,7 +344,13 @@ export default function AdminPage() {
           <section className="admin-welcome">
             <div className="admin-welcome-copy">
               <span className="eyebrow"><Icon name="sparkles" size={13} /> Resumen general</span>
-              <h2>{activeTab === 'orders' ? 'Tus pedidos, siempre bajo control' : 'Tu catálogo, siempre ordenado'}</h2>
+              <h2>
+                {activeTab === 'orders'
+                  ? 'Tus pedidos, siempre bajo control'
+                  : activeTab === 'promotions'
+                  ? 'Tus ofertas, listas para publicar'
+                  : 'Tu catálogo, siempre ordenado'}
+              </h2>
               <p>Revisa los indicadores clave y gestiona todo desde un mismo panel.</p>
             </div>
             <div className="admin-welcome-art" aria-hidden="true">
@@ -286,6 +385,29 @@ export default function AdminPage() {
                 onStatusChange={handleOrderStatus}
               />
             )
+          ) : activeTab === 'promotions' ? (
+            <div className="admin-products-layout">
+              <div className="admin-promotions-side">
+                <AdminRateControl rate={rate} onSave={handleSaveRate} />
+                <AdminPromotionForm
+                  editingPromotion={editingPromotion}
+                  onSubmit={handleAddOrUpdatePromotion}
+                  onCancelEdit={() => setEditingPromotion(null)}
+                  loading={loadingPromoForm}
+                />
+              </div>
+              {loadingPromotions ? <Loader label="Cargando ofertas..." /> : (
+                <AdminPromotionList
+                  promotions={promotions}
+                  onEdit={(promotion) => {
+                    setEditingPromotion(promotion);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onDelete={handleDeletePromotion}
+                  deletingId={deletingPromoId}
+                />
+              )}
+            </div>
           ) : (
             <div className="admin-products-layout">
               <AdminProductForm

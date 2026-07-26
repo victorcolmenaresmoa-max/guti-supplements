@@ -20,6 +20,8 @@ const SPREADSHEET_ID = 'PEGA_AQUI_EL_ID_DE_TU_GOOGLE_SHEET';
 
 const SHEET_PRODUCTOS = 'Productos';
 const SHEET_PEDIDOS = 'Pedidos';
+const SHEET_PROMOCIONES = 'Promociones';
+const SHEET_CONFIG = 'Configuracion';
 
 const PRODUCT_HEADERS = [
   'ID',
@@ -28,6 +30,7 @@ const PRODUCT_HEADERS = [
   'Precio',
   'Categoria',
   'Imagen',
+  'Galeria',
   'Stock',
   'Presentacion',
   'Beneficios',
@@ -35,6 +38,25 @@ const PRODUCT_HEADERS = [
   'Ingredientes',
   'Destacado',
 ];
+
+const PROMO_HEADERS = [
+  'ID',
+  'Titulo',
+  'Descripcion',
+  'Productos',
+  'Precio',
+  'PrecioRegular',
+  'Imagen',
+  'Activo',
+  'Destacado',
+];
+
+const CONFIG_HEADERS = ['Clave', 'Valor'];
+
+// Tasa de cambio por defecto (bolívares por 1 USD). 0 = sin configurar:
+// mientras sea 0, la tienda muestra los precios solo en USD hasta que la
+// actualices desde el panel de administración.
+const DEFAULT_TASA_BS = 0;
 
 const ORDER_HEADERS = [
   'ID',
@@ -71,6 +93,9 @@ function setupGutiSupplements() {
   const spreadsheet = getSpreadsheet_();
   const productsSheet = getSheet_(SHEET_PRODUCTOS, PRODUCT_HEADERS);
   const ordersSheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
+  const promotionsSheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
+  const configSheet = getSheet_(SHEET_CONFIG, CONFIG_HEADERS);
+  ensureConfigDefaults_(configSheet);
   SpreadsheetApp.flush();
 
   const result = {
@@ -79,6 +104,9 @@ function setupGutiSupplements() {
     spreadsheetUrl: spreadsheet.getUrl(),
     productsSheet: productsSheet.getName(),
     ordersSheet: ordersSheet.getName(),
+    promotionsSheet: promotionsSheet.getName(),
+    configSheet: configSheet.getName(),
+    productHeaders: getHeaders_(productsSheet),
     orderHeaders: getHeaders_(ordersSheet),
   };
 
@@ -246,6 +274,7 @@ function rowToProduct_(row, headers) {
     precio: Number(row[map.Precio]) || 0,
     categoria: String(row[map.Categoria] || ''),
     imagen: String(row[map.Imagen] || ''),
+    imagenes: map.Galeria !== undefined ? parseImageList_(row[map.Galeria]) : [],
     stock: Number(row[map.Stock]) || 0,
     presentacion: map.Presentacion !== undefined ? String(row[map.Presentacion] || '') : '',
     beneficios: map.Beneficios !== undefined ? String(row[map.Beneficios] || '') : '',
@@ -284,6 +313,89 @@ function rowToOrder_(row, headers) {
   };
 }
 
+function rowToPromotion_(row, headers) {
+  const map = getHeaderMap_(headers);
+  return {
+    id: String(row[map.ID] || ''),
+    titulo: String(row[map.Titulo] || ''),
+    descripcion: String(row[map.Descripcion] || ''),
+    productos: String(row[map.Productos] || ''),
+    precio: Number(row[map.Precio]) || 0,
+    precioRegular:
+      map.PrecioRegular !== undefined ? Number(row[map.PrecioRegular]) || 0 : 0,
+    imagen: String(row[map.Imagen] || ''),
+    activo: map.Activo !== undefined ? toBoolean_(row[map.Activo]) : true,
+    destacado: map.Destacado !== undefined ? toBoolean_(row[map.Destacado]) : false,
+  };
+}
+
+/**
+ * Normaliza la galería de imágenes. Acepta un arreglo, un JSON o un texto
+ * con una URL por línea y devuelve siempre un arreglo de cadenas limpias.
+ */
+function parseImageList_(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map(function (item) {
+        return String(item || '').trim();
+      })
+      .filter(function (item) {
+        return item !== '';
+      });
+  }
+
+  const raw = String(value || '').trim();
+  if (raw === '') return [];
+
+  if (raw.charAt(0) === '[') {
+    const parsed = safeJsonParse_(raw, null);
+    if (Array.isArray(parsed)) return parseImageList_(parsed);
+  }
+
+  return raw
+    .split(/[\r\n]+/)
+    .map(function (item) {
+      return item.trim();
+    })
+    .filter(function (item) {
+      return item !== '';
+    });
+}
+
+// ---------------------------------------------------------------------
+// Configuración (tasa de cambio Bs)
+// ---------------------------------------------------------------------
+
+function ensureConfigDefaults_(sheet) {
+  if (getConfigRow_(sheet, 'TasaBs') === -1) {
+    sheet.appendRow(['TasaBs', DEFAULT_TASA_BS]);
+  }
+}
+
+function getConfigRow_(sheet, key) {
+  if (sheet.getLastRow() < 2) return -1;
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let index = 0; index < values.length; index++) {
+    if (String(values[index][0]).trim() === key) return index + 2;
+  }
+  return -1;
+}
+
+function getConfigValue_(sheet, key, fallback) {
+  const rowNumber = getConfigRow_(sheet, key);
+  if (rowNumber === -1) return fallback;
+  return sheet.getRange(rowNumber, 2).getValue();
+}
+
+function setConfigValue_(sheet, key, value) {
+  const rowNumber = getConfigRow_(sheet, key);
+  if (rowNumber === -1) {
+    sheet.appendRow([key, value]);
+  } else {
+    sheet.getRange(rowNumber, 2).setValue(value);
+  }
+}
+
 // ---------------------------------------------------------------------
 // GET público: catálogo y detalle
 // ---------------------------------------------------------------------
@@ -294,6 +406,8 @@ function doGet(e) {
 
     if (action === 'getProducts') return handleGetProducts_();
     if (action === 'getProduct') return handleGetProduct_(e.parameter.id);
+    if (action === 'getPromotions') return handleGetPromotions_();
+    if (action === 'getConfig') return handleGetConfig_();
 
     return jsonResponse_({ ok: false, message: 'Acción no reconocida.' });
   } catch (error) {
@@ -315,6 +429,10 @@ function doPost(e) {
       'deleteProduct',
       'getOrders',
       'updateOrderStatus',
+      'addPromotion',
+      'updatePromotion',
+      'deletePromotion',
+      'updateConfig',
     ];
 
     if (adminActions.indexOf(action) !== -1 && body.token !== ADMIN_TOKEN) {
@@ -334,6 +452,14 @@ function doPost(e) {
         return handleGetOrders_();
       case 'updateOrderStatus':
         return handleUpdateOrderStatus_(body.id, body.estado);
+      case 'addPromotion':
+        return handleAddPromotion_(body.promotion);
+      case 'updatePromotion':
+        return handleUpdatePromotion_(body.promotion);
+      case 'deletePromotion':
+        return handleDeletePromotion_(body.id);
+      case 'updateConfig':
+        return handleUpdateConfig_(body.config);
       default:
         return jsonResponse_({ ok: false, message: 'Acción no reconocida.' });
     }
@@ -397,6 +523,7 @@ function handleAddProduct_(product) {
     Precio: Number(product.precio) || 0,
     Categoria: product.categoria || 'General',
     Imagen: product.imagen || '',
+    Galeria: JSON.stringify(parseImageList_(product.imagenes)),
     Stock: Number(product.stock) || 0,
     Presentacion: product.presentacion || '',
     Beneficios: product.beneficios || '',
@@ -429,6 +556,7 @@ function handleUpdateProduct_(product) {
     Precio: Number(product.precio) || 0,
     Categoria: product.categoria || 'General',
     Imagen: product.imagen || '',
+    Galeria: JSON.stringify(parseImageList_(product.imagenes)),
     Stock: Number(product.stock) || 0,
     Presentacion: product.presentacion || '',
     Beneficios: product.beneficios || '',
@@ -577,4 +705,122 @@ function handleUpdateOrderStatus_(id, status) {
   const headers = getHeaders_(sheet);
   const row = sheet.getRange(rowNumber, 1, 1, headers.length).getValues()[0];
   return jsonResponse_({ ok: true, data: rowToOrder_(row, headers) });
+}
+
+// ---------------------------------------------------------------------
+// Promociones (ofertas / combos)
+// ---------------------------------------------------------------------
+
+function handleGetPromotions_() {
+  const sheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
+  const headers = getHeaders_(sheet);
+
+  if (sheet.getLastRow() < 2) return jsonResponse_({ ok: true, data: [] });
+
+  const rows = sheet
+    .getRange(2, 1, sheet.getLastRow() - 1, headers.length)
+    .getValues();
+
+  const promotions = rows
+    .map(function (row) {
+      return rowToPromotion_(row, headers);
+    })
+    .filter(function (promotion) {
+      return promotion.id !== '';
+    });
+
+  return jsonResponse_({ ok: true, data: promotions });
+}
+
+function handleAddPromotion_(promotion) {
+  if (!promotion || !String(promotion.titulo || '').trim() || promotion.precio === undefined) {
+    return jsonResponse_({ ok: false, message: 'Datos de la promoción incompletos.' });
+  }
+
+  const sheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
+  const id = generateId_();
+
+  appendObject_(sheet, {
+    ID: id,
+    Titulo: String(promotion.titulo || '').trim(),
+    Descripcion: String(promotion.descripcion || '').trim(),
+    Productos: String(promotion.productos || '').trim(),
+    Precio: Number(promotion.precio) || 0,
+    PrecioRegular: Number(promotion.precioRegular) || 0,
+    Imagen: String(promotion.imagen || '').trim(),
+    Activo: promotion.activo === undefined ? true : Boolean(promotion.activo),
+    Destacado: Boolean(promotion.destacado),
+  });
+
+  return jsonResponse_({
+    ok: true,
+    data: Object.assign({}, promotion, { id: id }),
+  });
+}
+
+function handleUpdatePromotion_(promotion) {
+  if (!promotion || !promotion.id) {
+    return jsonResponse_({ ok: false, message: 'ID de la promoción requerido.' });
+  }
+
+  const sheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
+  const rowNumber = findRowById_(sheet, promotion.id);
+
+  if (rowNumber === -1) {
+    return jsonResponse_({ ok: false, message: 'Promoción no encontrada.' });
+  }
+
+  updateObjectRow_(sheet, rowNumber, {
+    Titulo: String(promotion.titulo || '').trim(),
+    Descripcion: String(promotion.descripcion || '').trim(),
+    Productos: String(promotion.productos || '').trim(),
+    Precio: Number(promotion.precio) || 0,
+    PrecioRegular: Number(promotion.precioRegular) || 0,
+    Imagen: String(promotion.imagen || '').trim(),
+    Activo: promotion.activo === undefined ? true : Boolean(promotion.activo),
+    Destacado: Boolean(promotion.destacado),
+  });
+
+  return jsonResponse_({ ok: true, data: promotion });
+}
+
+function handleDeletePromotion_(id) {
+  if (!id) return jsonResponse_({ ok: false, message: 'ID de la promoción requerido.' });
+
+  const sheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
+  const rowNumber = findRowById_(sheet, id);
+
+  if (rowNumber === -1) {
+    return jsonResponse_({ ok: false, message: 'Promoción no encontrada.' });
+  }
+
+  sheet.deleteRow(rowNumber);
+  return jsonResponse_({ ok: true, data: null });
+}
+
+// ---------------------------------------------------------------------
+// Configuración (tasa de cambio Bs)
+// ---------------------------------------------------------------------
+
+function handleGetConfig_() {
+  const sheet = getSheet_(SHEET_CONFIG, CONFIG_HEADERS);
+  ensureConfigDefaults_(sheet);
+  const tasa = Number(getConfigValue_(sheet, 'TasaBs', DEFAULT_TASA_BS)) || 0;
+  return jsonResponse_({ ok: true, data: { tasaBs: tasa } });
+}
+
+function handleUpdateConfig_(config) {
+  if (!config || config.tasaBs === undefined) {
+    return jsonResponse_({ ok: false, message: 'Configuración incompleta.' });
+  }
+
+  const tasa = Number(config.tasaBs);
+  if (!isFinite(tasa) || tasa < 0) {
+    return jsonResponse_({ ok: false, message: 'La tasa debe ser un número igual o mayor que cero.' });
+  }
+
+  const sheet = getSheet_(SHEET_CONFIG, CONFIG_HEADERS);
+  setConfigValue_(sheet, 'TasaBs', tasa);
+
+  return jsonResponse_({ ok: true, data: { tasaBs: tasa } });
 }

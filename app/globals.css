@@ -4568,3 +4568,335 @@ img {
   .hero-float-shaker { width: 34%; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* =====================================================================
+   Añadidos: precios en Bs, galería de producto, promociones y tasa
+   ===================================================================== */
+
+/* ---- Precio en bolívares (Bs) ---- */
+.product-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+}
+
+.product-price-bs {
+  margin-top: 2px;
+  color: var(--ink-500);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.product-detail-price-bs {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-500);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.subtotal-bs,
+.summary-bs {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-500);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- Galería de producto (miniaturas) ---- */
+.product-thumb-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+
+.product-thumb {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--cream-100);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-thumb:hover {
+  transform: translateY(-2px);
+}
+
+.product-thumb.active {
+  border-color: var(--wine-600);
+}
+
+/* ---- Campos de galería en el formulario admin ---- */
+.gallery-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gallery-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gallery-input-row input {
+  flex: 1;
+}
+
+.gallery-add-btn {
+  margin-top: 10px;
+}
+
+/* ---- Sección de promociones (catálogo) ---- */
+.promotions-section {
+  background: linear-gradient(180deg, var(--cream-50), var(--white));
+}
+
+.promotions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 26px;
+  margin-top: 34px;
+}
+
+.promo-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.promo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.promo-media {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--cream-100);
+}
+
+.promo-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promo-ribbon {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--wine-700);
+  border-radius: 999px;
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.promo-discount {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--gold-500);
+  border-radius: 999px;
+  color: var(--wine-950);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.promo-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 22px;
+}
+
+.promo-body h3 {
+  color: var(--wine-900);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.promo-desc {
+  margin-top: 8px;
+  color: var(--ink-500);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.promo-items {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.promo-items li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-700);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.promo-items svg {
+  flex: 0 0 auto;
+  color: var(--success);
+}
+
+.promo-price-block {
+  margin: 20px 0 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.promo-price-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.promo-price-main strong {
+  color: var(--wine-700);
+  font-size: 28px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+
+.promo-price-old {
+  color: var(--ink-500);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.promo-price-bs {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-500);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* ---- Panel de tasa de cambio (admin) ---- */
+.admin-promotions-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.admin-rate-current {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  background: var(--rose-100);
+  border-radius: 999px;
+  color: var(--wine-700);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-rate-help {
+  margin: 6px 0 16px;
+  color: var(--ink-500);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.admin-rate-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.admin-rate-row .field {
+  flex: 1;
+}
+
+.admin-rate-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: var(--success);
+  font-size: 12.5px;
+  font-weight: 750;
+}
+
+/* ---- Badges de estado en la lista de ofertas ---- */
+.admin-promo-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mini-status.on {
+  background: rgba(36, 122, 86, 0.12);
+  color: var(--success);
+}
+
+.mini-status.off {
+  background: rgba(179, 58, 69, 0.12);
+  color: var(--danger);
+}
+
+@media (max-width: 620px) {
+  .admin-rate-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-rate-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

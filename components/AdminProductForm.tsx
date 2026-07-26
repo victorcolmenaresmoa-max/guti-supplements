@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   precio: '',
   categoria: '',
   imagen: '',
+  imagenes: [''] as string[],
   stock: '',
   presentacion: '',
   beneficios: '',
@@ -42,6 +43,10 @@ export default function AdminProductForm({
         precio: String(editingProduct.precio),
         categoria: editingProduct.categoria,
         imagen: editingProduct.imagen,
+        imagenes:
+          editingProduct.imagenes && editingProduct.imagenes.length > 0
+            ? [...editingProduct.imagenes]
+            : [''],
         stock: String(editingProduct.stock),
         presentacion: editingProduct.presentacion || '',
         beneficios: editingProduct.beneficios || '',
@@ -63,6 +68,25 @@ export default function AdminProductForm({
       ...previous,
       [name]: type === 'checkbox' ? (event.target as HTMLInputElement).checked : value,
     }));
+  };
+
+  const handleGalleryChange = (index: number, value: string) => {
+    setForm((previous) => {
+      const imagenes = [...previous.imagenes];
+      imagenes[index] = value;
+      return { ...previous, imagenes };
+    });
+  };
+
+  const addGalleryField = () => {
+    setForm((previous) => ({ ...previous, imagenes: [...previous.imagenes, ''] }));
+  };
+
+  const removeGalleryField = (index: number) => {
+    setForm((previous) => {
+      const imagenes = previous.imagenes.filter((_, i) => i !== index);
+      return { ...previous, imagenes: imagenes.length > 0 ? imagenes : [''] };
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -87,12 +111,17 @@ export default function AdminProductForm({
       return;
     }
 
+    const imagenes = form.imagenes
+      .map((url) => url.trim())
+      .filter((url) => url !== '');
+
     await onSubmit({
       nombre: form.nombre.trim(),
       descripcion: form.descripcion.trim(),
       precio: price,
       categoria: form.categoria.trim() || 'General',
       imagen: form.imagen.trim(),
+      imagenes,
       stock,
       presentacion: form.presentacion.trim(),
       beneficios: form.beneficios.trim(),
@@ -135,6 +164,7 @@ export default function AdminProductForm({
           <div className="field">
             <label htmlFor="precio">Precio en USD *</label>
             <div className="input-prefix"><span>$</span><input id="precio" name="precio" value={form.precio} onChange={handleChange} placeholder="49.99" inputMode="decimal" /></div>
+            <small className="field-hint">El equivalente en Bs se calcula automáticamente con la tasa configurada.</small>
           </div>
           <div className="field">
             <label htmlFor="stock">Unidades disponibles</label>
@@ -154,9 +184,37 @@ export default function AdminProductForm({
         </div>
 
         <div className="field">
-          <label htmlFor="imagen">URL de la imagen</label>
+          <label htmlFor="imagen">Imagen principal (portada)</label>
           <input id="imagen" name="imagen" value={form.imagen} onChange={handleChange} placeholder="https://..." />
           <small className="field-hint">Usa una imagen cuadrada, nítida y con fondo limpio para una presentación más premium.</small>
+        </div>
+
+        <div className="field">
+          <label>Fotos adicionales del producto</label>
+          <div className="gallery-inputs">
+            {form.imagenes.map((url, index) => (
+              <div className="gallery-input-row" key={index}>
+                <input
+                  value={url}
+                  onChange={(event) => handleGalleryChange(index, event.target.value)}
+                  placeholder={`https://... (foto ${index + 1})`}
+                />
+                <button
+                  type="button"
+                  className="admin-action-btn danger"
+                  onClick={() => removeGalleryField(index)}
+                  aria-label="Quitar foto"
+                  title="Quitar foto"
+                >
+                  <Icon name="trash" size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="btn btn-outline btn-sm gallery-add-btn" onClick={addGalleryField}>
+            <Icon name="plus" size={15} /> Agregar otra foto
+          </button>
+          <small className="field-hint">Añade varias fotos del mismo producto (diferentes ángulos, etiqueta, etc.). Se mostrarán como galería en la ficha del producto.</small>
         </div>
 
         <div className="field">

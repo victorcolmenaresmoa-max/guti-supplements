@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
 import { getProduct, getProducts } from '@/lib/api';
 import { Product } from '@/types';
+import { useCurrency } from '@/context/CurrencyContext';
+import { formatUSD, formatBs, hasRate } from '@/lib/currency';
 import Navbar from './Navbar';
 import CheckoutForm from './CheckoutForm';
 import Loader from './Loader';
@@ -27,6 +29,18 @@ export default function ProductDetailView({ productId }: { productId: string }) 
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [activeImage, setActiveImage] = useState('');
+  const { rate } = useCurrency();
+
+  const gallery = product
+    ? Array.from(
+        new Set(
+          [product.imagen, ...(product.imagenes || [])]
+            .map((url) => (url || '').trim())
+            .filter((url) => url !== '')
+        )
+      )
+    : [];
 
   useEffect(() => {
     let active = true;
@@ -80,6 +94,15 @@ export default function ProductDetailView({ productId }: { productId: string }) 
     };
   }, [productId]);
 
+  useEffect(() => {
+    const first = product
+      ? [product.imagen, ...(product.imagenes || [])]
+          .map((url) => (url || '').trim())
+          .find((url) => url !== '')
+      : '';
+    setActiveImage(first || '');
+  }, [product]);
+
   const openCheckout = () => {
     if (!product || product.stock <= 0) return;
     setShowCheckout(true);
@@ -109,7 +132,7 @@ export default function ProductDetailView({ productId }: { productId: string }) 
               <section className="product-gallery-card">
                 <div className="product-detail-image">
                   <img
-                    src={product.imagen || 'https://placehold.co/1000x1000/5d0a2a/ffffff?text=GutiSupplements'}
+                    src={activeImage || product.imagen || 'https://placehold.co/1000x1000/5d0a2a/ffffff?text=GutiSupplements'}
                     alt={product.nombre}
                   />
                   {product.destacado && (
@@ -118,6 +141,22 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                     </span>
                   )}
                 </div>
+                {gallery.length > 1 && (
+                  <div className="product-thumb-strip" role="list" aria-label="Fotos del producto">
+                    {gallery.map((url) => (
+                      <button
+                        type="button"
+                        key={url}
+                        role="listitem"
+                        className={`product-thumb ${activeImage === url ? 'active' : ''}`}
+                        onClick={() => setActiveImage(url)}
+                        aria-label="Ver foto del producto"
+                      >
+                        <img src={url} alt={product.nombre} loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="product-assurance-row">
                   <span><Icon name="shield" size={18} /> Solicitud segura</span>
                   <span><Icon name="message" size={18} /> Contacto directo</span>
@@ -131,7 +170,10 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                 {product.presentacion && <p className="product-presentation">{product.presentacion}</p>}
 
                 <div className="product-detail-price">
-                  ${product.precio.toFixed(2)} <small>USD</small>
+                  {formatUSD(product.precio)} <small>USD</small>
+                  {hasRate(rate) && (
+                    <span className="product-detail-price-bs">{formatBs(product.precio, rate)}</span>
+                  )}
                 </div>
 
                 <p className="product-long-description">{product.descripcion}</p>
@@ -149,7 +191,12 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                       <span>Cantidad</span>
                       <small>Selecciona cuántas unidades deseas</small>
                     </div>
-                    <strong>${(product.precio * quantity).toFixed(2)} USD</strong>
+                    <strong>
+                      {formatUSD(product.precio * quantity)} USD
+                      {hasRate(rate) && (
+                        <span className="subtotal-bs">{formatBs(product.precio * quantity, rate)}</span>
+                      )}
+                    </strong>
                   </div>
 
                   <div className="direct-order-controls">

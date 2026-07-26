@@ -3,6 +3,8 @@ import {
   OrderPayload,
   OrderRecord,
   Product,
+  Promotion,
+  StoreConfig,
 } from '@/types';
 
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || '';
@@ -131,5 +133,59 @@ export async function updateOrderStatus(
     method: 'POST',
     action: 'updateOrderStatus',
     body: { id, estado },
+  });
+}
+
+// ---------------------------------------------------------------------
+// Promociones (ofertas / combos)
+// ---------------------------------------------------------------------
+
+export async function getPromotions(): Promise<ApiResponse<Promotion[]>> {
+  return gasFetch<Promotion[]>({ method: 'GET', action: 'getPromotions' });
+}
+
+export async function addPromotion(
+  promotion: Omit<Promotion, 'id'>
+): Promise<ApiResponse<Promotion>> {
+  return gasFetch<Promotion>({
+    method: 'POST',
+    action: 'addPromotion',
+    body: { promotion },
+  });
+}
+
+export async function updatePromotion(
+  promotion: Promotion
+): Promise<ApiResponse<Promotion>> {
+  return gasFetch<Promotion>({
+    method: 'POST',
+    action: 'updatePromotion',
+    body: { promotion },
+  });
+}
+
+export async function deletePromotion(id: string): Promise<ApiResponse<null>> {
+  return gasFetch<null>({
+    method: 'POST',
+    action: 'deletePromotion',
+    body: { id },
+  });
+}
+
+// ---------------------------------------------------------------------
+// Configuración de la tienda (tasa de cambio Bs)
+// ---------------------------------------------------------------------
+
+export async function getConfig(): Promise<ApiResponse<StoreConfig>> {
+  return gasFetch<StoreConfig>({ method: 'GET', action: 'getConfig' });
+}
+
+export async function updateConfig(
+  config: StoreConfig
+): Promise<ApiResponse<StoreConfig>> {
+  return gasFetch<StoreConfig>({
+    method: 'POST',
+    action: 'updateConfig',
+    body: { config },
   });
 }

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createOrder } from '@/lib/api';
 import { Product } from '@/types';
+import { useCurrency } from '@/context/CurrencyContext';
+import { formatUSD, formatBs, hasRate } from '@/lib/currency';
 import Icon from './Icons';
 
 const INITIAL_FORM = {
@@ -28,6 +30,7 @@ export default function CheckoutForm({ product, quantity, onClose }: CheckoutFor
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState('');
 
+  const { rate } = useCurrency();
   const total = useMemo(() => product.precio * quantity, [product.precio, quantity]);
   const needsAddress = form.metodoEntrega !== 'Retiro coordinado';
 
@@ -116,7 +119,10 @@ export default function CheckoutForm({ product, quantity, onClose }: CheckoutFor
               <strong>{product.nombre}</strong>
               <span>{quantity} × ${product.precio.toFixed(2)}</span>
             </div>
-            <b>${total.toFixed(2)} USD</b>
+            <b>
+              {formatUSD(total)} USD
+              {hasRate(rate) && <span className="summary-bs">{formatBs(total, rate)}</span>}
+            </b>
           </div>
           <button className="btn btn-primary btn-block" onClick={onClose}>
             Volver al producto
@@ -244,6 +250,7 @@ export default function CheckoutForm({ product, quantity, onClose }: CheckoutFor
                   <option>Zelle</option>
                   <option>Pago móvil</option>
                   <option>Efectivo en USD</option>
+                  <option>Efectivo en Bs</option>
                 </select>
               </div>
 
