@@ -29,6 +29,8 @@ export interface Promotion {
   /** Precio regular en USD (opcional), para mostrar el ahorro. */
   precioRegular?: number;
   imagen: string;
+  /** Imágenes adicionales de la oferta (frente, reverso, laterales o detalles). */
+  imagenes?: string[];
   activo?: boolean;
   destacado?: boolean;
 }

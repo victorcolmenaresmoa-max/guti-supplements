@@ -5,7 +5,6 @@ import AdminProductForm from '@/components/AdminProductForm';
 import AdminProductList from '@/components/AdminProductList';
 import AdminPromotionForm from '@/components/AdminPromotionForm';
 import AdminPromotionList from '@/components/AdminPromotionList';
-import AdminRateControl from '@/components/AdminRateControl';
 import AdminOrderList from '@/components/AdminOrderList';
 import BrandLogo from '@/components/BrandLogo';
 import Loader from '@/components/Loader';
@@ -15,11 +14,9 @@ import {
   addPromotion,
   deleteProduct,
   deletePromotion,
-  getConfig,
   getOrders,
   getProducts,
   getPromotions,
-  updateConfig,
   updateOrderStatus,
   updateProduct,
   updatePromotion,
@@ -40,7 +37,6 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [rate, setRate] = useState(0);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingPromotions, setLoadingPromotions] = useState(true);
@@ -62,7 +58,6 @@ export default function AdminPage() {
       void loadProducts();
       void loadOrders();
       void loadPromotions();
-      void loadConfig();
     }
   }, [authenticated]);
 
@@ -97,13 +92,6 @@ export default function AdminPage() {
       setGlobalError(response.message);
     }
     setLoadingPromotions(false);
-  };
-
-  const loadConfig = async () => {
-    const response = await getConfig();
-    if (response.ok && response.data) {
-      setRate(Number(response.data.tasaBs) || 0);
-    }
   };
 
   const handleLogin = (event: React.FormEvent) => {
@@ -177,17 +165,6 @@ export default function AdminPage() {
       setGlobalError(response.message || 'No se pudo eliminar la oferta.');
     }
     setDeletingPromoId(null);
-  };
-
-  const handleSaveRate = async (nextRate: number): Promise<boolean> => {
-    setGlobalError('');
-    const response = await updateConfig({ tasaBs: nextRate });
-    if (response.ok && response.data) {
-      setRate(Number(response.data.tasaBs) || 0);
-      return true;
-    }
-    setGlobalError(response.message || 'No se pudo guardar la tasa de cambio.');
-    return false;
   };
 
   const handleOrderStatus = async (id: string, status: string) => {
@@ -388,7 +365,6 @@ export default function AdminPage() {
           ) : activeTab === 'promotions' ? (
             <div className="admin-products-layout">
               <div className="admin-promotions-side">
-                <AdminRateControl rate={rate} onSave={handleSaveRate} />
                 <AdminPromotionForm
                   editingPromotion={editingPromotion}
                   onSubmit={handleAddOrUpdatePromotion}

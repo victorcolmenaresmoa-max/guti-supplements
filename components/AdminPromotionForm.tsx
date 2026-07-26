@@ -11,6 +11,7 @@ const EMPTY_FORM = {
   precio: '',
   precioRegular: '',
   imagen: '',
+  imagenes: [''] as string[],
   activo: true,
   destacado: false,
 };
@@ -42,6 +43,10 @@ export default function AdminPromotionForm({
           ? String(editingPromotion.precioRegular)
           : '',
         imagen: editingPromotion.imagen || '',
+        imagenes:
+          editingPromotion.imagenes && editingPromotion.imagenes.length > 0
+            ? [...editingPromotion.imagenes]
+            : [''],
         activo: editingPromotion.activo !== false,
         destacado: Boolean(editingPromotion.destacado),
       });
@@ -59,6 +64,25 @@ export default function AdminPromotionForm({
       ...previous,
       [name]: type === 'checkbox' ? (event.target as HTMLInputElement).checked : value,
     }));
+  };
+
+  const handleGalleryChange = (index: number, value: string) => {
+    setForm((previous) => {
+      const imagenes = [...previous.imagenes];
+      imagenes[index] = value;
+      return { ...previous, imagenes };
+    });
+  };
+
+  const addGalleryField = () => {
+    setForm((previous) => ({ ...previous, imagenes: [...previous.imagenes, ''] }));
+  };
+
+  const removeGalleryField = (index: number) => {
+    setForm((previous) => {
+      const imagenes = previous.imagenes.filter((_, itemIndex) => itemIndex !== index);
+      return { ...previous, imagenes: imagenes.length > 0 ? imagenes : [''] };
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -82,6 +106,10 @@ export default function AdminPromotionForm({
       return;
     }
 
+    const imagenes = form.imagenes
+      .map((url) => url.trim())
+      .filter((url) => url !== '');
+
     await onSubmit({
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim(),
@@ -89,6 +117,7 @@ export default function AdminPromotionForm({
       precio,
       precioRegular,
       imagen: form.imagen.trim(),
+      imagenes,
       activo: form.activo,
       destacado: form.destacado,
     });
@@ -142,8 +171,37 @@ export default function AdminPromotionForm({
         </div>
 
         <div className="field">
-          <label htmlFor="promo-imagen">URL de la imagen</label>
+          <label htmlFor="promo-imagen">Imagen principal de la oferta</label>
           <input id="promo-imagen" name="imagen" value={form.imagen} onChange={handleChange} placeholder="https://..." />
+          <small className="field-hint">Esta será la primera foto visible en la tarjeta de la oferta.</small>
+        </div>
+
+        <div className="field">
+          <label>Fotos adicionales de la oferta</label>
+          <div className="gallery-inputs">
+            {form.imagenes.map((url, index) => (
+              <div className="gallery-input-row" key={index}>
+                <input
+                  value={url}
+                  onChange={(event) => handleGalleryChange(index, event.target.value)}
+                  placeholder={`https://... (foto ${index + 2})`}
+                />
+                <button
+                  type="button"
+                  className="admin-action-btn danger"
+                  onClick={() => removeGalleryField(index)}
+                  aria-label="Quitar foto"
+                  title="Quitar foto"
+                >
+                  <Icon name="trash" size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="btn btn-outline btn-sm gallery-add-btn" onClick={addGalleryField}>
+            <Icon name="plus" size={15} /> Agregar otra foto
+          </button>
+          <small className="field-hint">Puedes añadir fotos del frente, parte trasera, laterales o detalles de la etiqueta.</small>
         </div>
 
         <label className="admin-check-row">

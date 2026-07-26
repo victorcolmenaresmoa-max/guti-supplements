@@ -35,6 +35,13 @@ export default function AdminPromotionList({
       ) : (
         <div className="admin-product-list">
           {promotions.map((promotion) => {
+            const photoCount = Array.from(
+              new Set(
+                [promotion.imagen, ...(promotion.imagenes || [])]
+                  .map((url) => (url || '').trim())
+                  .filter((url) => url !== '')
+              )
+            ).length;
             const items = (promotion.productos || '')
               .split(/[\r\n]+/)
               .map((item) => item.trim())
@@ -50,7 +57,10 @@ export default function AdminPromotionList({
                   <div className="admin-product-title-row">
                     <div>
                       <h4>{promotion.titulo}</h4>
-                      <span>{items.length > 0 ? `${items.length} producto${items.length === 1 ? '' : 's'} incluidos` : 'Oferta'}</span>
+                      <span>
+                        {items.length > 0 ? `${items.length} producto${items.length === 1 ? '' : 's'} incluidos` : 'Oferta'}
+                        {photoCount > 0 ? ` · ${photoCount} foto${photoCount === 1 ? '' : 's'}` : ''}
+                      </span>
                     </div>
                     <div className="admin-promo-badges">
                       {promotion.destacado && <span className="mini-featured"><Icon name="sparkles" size={12} /> Destacada</span>}

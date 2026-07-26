@@ -22,6 +22,7 @@ function promotionToProduct(promotion: Promotion): Product {
     precio: promotion.precio,
     categoria: 'Oferta',
     imagen: promotion.imagen,
+    imagenes: promotion.imagenes || [],
     stock: 999,
     presentacion: items.length > 0 ? `Incluye: ${items.join(' + ')}` : 'Oferta en combo',
   };

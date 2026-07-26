@@ -5,8 +5,7 @@ import { useEffect, useState } from 'react';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
 import { getProduct, getProducts } from '@/lib/api';
 import { Product } from '@/types';
-import { useCurrency } from '@/context/CurrencyContext';
-import { formatUSD, formatBs, hasRate } from '@/lib/currency';
+import { formatUSD } from '@/lib/currency';
 import Navbar from './Navbar';
 import CheckoutForm from './CheckoutForm';
 import Loader from './Loader';
@@ -24,13 +23,15 @@ function normalizeProductId(value: unknown) {
   return safeDecode(String(value ?? '')).trim().toLowerCase();
 }
 
+type ProductInfoTab = 'beneficios' | 'ingredientes' | 'modoUso';
+
 export default function ProductDetailView({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeImage, setActiveImage] = useState('');
-  const { rate } = useCurrency();
+  const [activeInfoTab, setActiveInfoTab] = useState<ProductInfoTab>('beneficios');
 
   const gallery = product
     ? Array.from(
@@ -40,6 +41,19 @@ export default function ProductDetailView({ productId }: { productId: string }) 
             .filter((url) => url !== '')
         )
       )
+    : [];
+
+  const benefits = (product?.beneficios || '')
+    .split(/[\r\n]+/)
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+
+  const availableInfoTabs: ProductInfoTab[] = product
+    ? [
+        ...(benefits.length > 0 ? (['beneficios'] as ProductInfoTab[]) : []),
+        ...(product.ingredientes?.trim() ? (['ingredientes'] as ProductInfoTab[]) : []),
+        ...(product.modoUso?.trim() ? (['modoUso'] as ProductInfoTab[]) : []),
+      ]
     : [];
 
   useEffect(() => {
@@ -103,9 +117,25 @@ export default function ProductDetailView({ productId }: { productId: string }) 
     setActiveImage(first || '');
   }, [product]);
 
+  useEffect(() => {
+    if (!product) return;
+    const hasBenefits = (product.beneficios || '')
+      .split(/[\r\n]+/)
+      .some((item) => item.trim() !== '');
+    if (hasBenefits) setActiveInfoTab('beneficios');
+    else if (product.ingredientes?.trim()) setActiveInfoTab('ingredientes');
+    else if (product.modoUso?.trim()) setActiveInfoTab('modoUso');
+  }, [product]);
+
   const openCheckout = () => {
     if (!product || product.stock <= 0) return;
     setShowCheckout(true);
+  };
+
+  const infoTabLabels: Record<ProductInfoTab, string> = {
+    beneficios: 'Beneficios',
+    ingredientes: 'Ingredientes',
+    modoUso: 'Modo de uso',
   };
 
   return (
@@ -113,7 +143,7 @@ export default function ProductDetailView({ productId }: { productId: string }) 
       <Navbar />
 
       <main className="product-detail-page product-detail-page-compact">
-        <div className="container">
+        <div className="container product-detail-container">
           <Link href="/#catalogo" className="back-link">
             <Icon name="chevronLeft" size={17} /> Volver al catálogo
           </Link>
@@ -143,16 +173,16 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                 </div>
                 {gallery.length > 1 && (
                   <div className="product-thumb-strip" role="list" aria-label="Fotos del producto">
-                    {gallery.map((url) => (
+                    {gallery.map((url, index) => (
                       <button
                         type="button"
-                        key={url}
+                        key={`${url}-${index}`}
                         role="listitem"
                         className={`product-thumb ${activeImage === url ? 'active' : ''}`}
                         onClick={() => setActiveImage(url)}
-                        aria-label="Ver foto del producto"
+                        aria-label={`Ver foto ${index + 1} del producto`}
                       >
-                        <img src={url} alt={product.nombre} loading="lazy" />
+                        <img src={url} alt="" loading="lazy" />
                       </button>
                     ))}
                   </div>
@@ -171,9 +201,6 @@ export default function ProductDetailView({ productId }: { productId: string }) 
 
                 <div className="product-detail-price">
                   {formatUSD(product.precio)} <small>USD</small>
-                  {hasRate(rate) && (
-                    <span className="product-detail-price-bs">{formatBs(product.precio, rate)}</span>
-                  )}
                 </div>
 
                 <p className="product-long-description">{product.descripcion}</p>
@@ -191,12 +218,7 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                       <span>Cantidad</span>
                       <small>Selecciona cuántas unidades deseas</small>
                     </div>
-                    <strong>
-                      {formatUSD(product.precio * quantity)} USD
-                      {hasRate(rate) && (
-                        <span className="subtotal-bs">{formatBs(product.precio * quantity, rate)}</span>
-                      )}
-                    </strong>
+                    <strong>{formatUSD(product.precio * quantity)} USD</strong>
                   </div>
 
                   <div className="direct-order-controls">
@@ -237,6 +259,42 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                     disponibilidad, entrega y pago directamente contigo.
                   </p>
                 </div>
+
+                {availableInfoTabs.length > 0 && (
+                  <div className="product-info-tabs">
+                    <div className="product-info-tab-list" role="tablist" aria-label="Información del producto">
+                      {availableInfoTabs.map((tab) => (
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={activeInfoTab === tab}
+                          className={activeInfoTab === tab ? 'active' : ''}
+                          key={tab}
+                          onClick={() => setActiveInfoTab(tab)}
+                        >
+                          {infoTabLabels[tab]}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="product-info-tab-panel" role="tabpanel">
+                      {activeInfoTab === 'beneficios' && benefits.length > 0 ? (
+                        <ul className="product-benefits-list">
+                          {benefits.map((benefit, index) => (
+                            <li key={`${benefit}-${index}`}>
+                              <Icon name="check" size={15} />
+                              <span>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : activeInfoTab === 'ingredientes' ? (
+                        <p>{product.ingredientes}</p>
+                      ) : (
+                        <p>{product.modoUso}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
           )}

@@ -47,6 +47,7 @@ const PROMO_HEADERS = [
   'Precio',
   'PrecioRegular',
   'Imagen',
+  'Galeria',
   'Activo',
   'Destacado',
 ];
@@ -324,6 +325,7 @@ function rowToPromotion_(row, headers) {
     precioRegular:
       map.PrecioRegular !== undefined ? Number(row[map.PrecioRegular]) || 0 : 0,
     imagen: String(row[map.Imagen] || ''),
+    imagenes: map.Galeria !== undefined ? parseImageList_(row[map.Galeria]) : [],
     activo: map.Activo !== undefined ? toBoolean_(row[map.Activo]) : true,
     destacado: map.Destacado !== undefined ? toBoolean_(row[map.Destacado]) : false,
   };
@@ -748,6 +750,7 @@ function handleAddPromotion_(promotion) {
     Precio: Number(promotion.precio) || 0,
     PrecioRegular: Number(promotion.precioRegular) || 0,
     Imagen: String(promotion.imagen || '').trim(),
+    Galeria: JSON.stringify(parseImageList_(promotion.imagenes)),
     Activo: promotion.activo === undefined ? true : Boolean(promotion.activo),
     Destacado: Boolean(promotion.destacado),
   });
@@ -777,6 +780,7 @@ function handleUpdatePromotion_(promotion) {
     Precio: Number(promotion.precio) || 0,
     PrecioRegular: Number(promotion.precioRegular) || 0,
     Imagen: String(promotion.imagen || '').trim(),
+    Galeria: JSON.stringify(parseImageList_(promotion.imagenes)),
     Activo: promotion.activo === undefined ? true : Boolean(promotion.activo),
     Destacado: Boolean(promotion.destacado),
   });

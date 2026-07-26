@@ -1,9 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Promotion } from '@/types';
 import Icon from './Icons';
-import { useCurrency } from '@/context/CurrencyContext';
-import { formatUSD, formatBs, hasRate } from '@/lib/currency';
+import { formatUSD } from '@/lib/currency';
 
 interface Props {
   promotion: Promotion;
@@ -11,7 +11,15 @@ interface Props {
 }
 
 export default function PromotionCard({ promotion, onRequest }: Props) {
-  const { rate } = useCurrency();
+  const gallery = Array.from(
+    new Set(
+      [promotion.imagen, ...(promotion.imagenes || [])]
+        .map((url) => (url || '').trim())
+        .filter((url) => url !== '')
+    )
+  );
+  const [selectedImage, setSelectedImage] = useState('');
+  const activeImage = gallery.includes(selectedImage) ? selectedImage : gallery[0] || '';
 
   const items = promotion.productos
     .split(/[\r\n]+/)
@@ -32,7 +40,7 @@ export default function PromotionCard({ promotion, onRequest }: Props) {
       <div className="promo-media">
         <img
           src={
-            promotion.imagen ||
+            activeImage ||
             'https://placehold.co/900x600/6d0b2f/ffffff?text=Oferta+GutiSupplements'
           }
           alt={promotion.titulo}
@@ -45,6 +53,23 @@ export default function PromotionCard({ promotion, onRequest }: Props) {
           <span className="promo-discount">-{discountPercent}%</span>
         )}
       </div>
+
+      {gallery.length > 1 && (
+        <div className="promo-thumb-strip" role="list" aria-label={`Fotos de ${promotion.titulo}`}>
+          {gallery.map((url, index) => (
+            <button
+              type="button"
+              role="listitem"
+              key={`${url}-${index}`}
+              className={`promo-thumb ${activeImage === url ? 'active' : ''}`}
+              onClick={() => setSelectedImage(url)}
+              aria-label={`Ver foto ${index + 1} de la oferta`}
+            >
+              <img src={url} alt="" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="promo-body">
         <h3>{promotion.titulo}</h3>
@@ -67,9 +92,7 @@ export default function PromotionCard({ promotion, onRequest }: Props) {
               <span className="promo-price-old">{formatUSD(promotion.precioRegular as number)}</span>
             )}
           </div>
-          {hasRate(rate) && (
-            <span className="promo-price-bs">{formatBs(promotion.precio, rate)}</span>
-          )}
+          <span className="promo-price-note">El pago y cualquier equivalente en Bs se coordinan por WhatsApp.</span>
         </div>
 
         <button className="btn btn-primary btn-block" onClick={() => onRequest(promotion)}>

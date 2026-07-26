@@ -164,7 +164,7 @@ export default function AdminProductForm({
           <div className="field">
             <label htmlFor="precio">Precio en USD *</label>
             <div className="input-prefix"><span>$</span><input id="precio" name="precio" value={form.precio} onChange={handleChange} placeholder="49.99" inputMode="decimal" /></div>
-            <small className="field-hint">El equivalente en Bs se calcula automáticamente con la tasa configurada.</small>
+            <small className="field-hint">El precio se publica en USD. El pago se confirma directamente con el asesor.</small>
           </div>
           <div className="field">
             <label htmlFor="stock">Unidades disponibles</label>
