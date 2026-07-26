@@ -32,6 +32,8 @@ export default function ProductDetailView({ productId }: { productId: string }) 
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeImage, setActiveImage] = useState('');
   const [activeInfoTab, setActiveInfoTab] = useState<ProductInfoTab>('beneficios');
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
 
   const gallery = product
     ? Array.from(
@@ -127,6 +129,49 @@ export default function ProductDetailView({ productId }: { productId: string }) 
     else if (product.modoUso?.trim()) setActiveInfoTab('modoUso');
   }, [product]);
 
+
+  useEffect(() => {
+    if (!zoomOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setZoomOpen(false);
+      }
+      if (event.key === '+' || event.key === '=') {
+        setZoomScale((value) => Math.min(3, Number((value + 0.5).toFixed(1))));
+      }
+      if (event.key === '-') {
+        setZoomScale((value) => Math.max(1, Number((value - 0.5).toFixed(1))));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [zoomOpen]);
+
+  const openImageZoom = () => {
+    if (!activeImage && !product?.imagen) return;
+    setZoomScale(1);
+    setZoomOpen(true);
+  };
+
+  const closeImageZoom = () => {
+    setZoomOpen(false);
+    setZoomScale(1);
+  };
+
+  const changeZoomImage = (url: string) => {
+    setActiveImage(url);
+    setZoomScale(1);
+  };
+
   const openCheckout = () => {
     if (!product || product.stock <= 0) return;
     setShowCheckout(true);
@@ -165,6 +210,16 @@ export default function ProductDetailView({ productId }: { productId: string }) 
                     src={activeImage || product.imagen || 'https://placehold.co/1000x1000/5d0a2a/ffffff?text=GutiSupplements'}
                     alt={product.nombre}
                   />
+                  <button
+                    type="button"
+                    className="product-image-zoom-button"
+                    onClick={openImageZoom}
+                    aria-label="Ampliar foto del producto"
+                    title="Ampliar imagen"
+                  >
+                    <Icon name="search" size={19} />
+                    <span>Ampliar</span>
+                  </button>
                   {product.destacado && (
                     <span className="product-featured product-featured-detail">
                       <Icon name="sparkles" size={14} /> Selección destacada
@@ -300,6 +355,88 @@ export default function ProductDetailView({ productId }: { productId: string }) 
           )}
         </div>
       </main>
+
+      {zoomOpen && product && (
+        <div
+          className="product-image-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Vista ampliada de ${product.nombre}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeImageZoom();
+          }}
+        >
+          <div className="product-image-lightbox-shell">
+            <div className="product-image-lightbox-header">
+              <div>
+                <span>Vista ampliada</span>
+                <strong>{product.nombre}</strong>
+              </div>
+              <div className="product-image-lightbox-actions">
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((value) => Math.max(1, Number((value - 0.5).toFixed(1))))}
+                  disabled={zoomScale <= 1}
+                  aria-label="Alejar imagen"
+                  title="Alejar"
+                >
+                  −
+                </button>
+                <span aria-live="polite">{Math.round(zoomScale * 100)}%</span>
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((value) => Math.min(3, Number((value + 0.5).toFixed(1))))}
+                  disabled={zoomScale >= 3}
+                  aria-label="Acercar imagen"
+                  title="Acercar"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className="product-image-lightbox-close"
+                  onClick={closeImageZoom}
+                  aria-label="Cerrar vista ampliada"
+                  title="Cerrar"
+                >
+                  <Icon name="close" size={21} />
+                </button>
+              </div>
+            </div>
+
+            <div
+              className={`product-image-lightbox-stage ${zoomScale > 1 ? 'is-zoomed' : ''}`}
+              onDoubleClick={() => setZoomScale((value) => (value > 1 ? 1 : 2))}
+            >
+              <img
+                src={activeImage || product.imagen}
+                alt={product.nombre}
+                style={{ transform: `scale(${zoomScale})` }}
+                draggable={false}
+              />
+            </div>
+
+            {gallery.length > 1 && (
+              <div className="product-image-lightbox-thumbs" aria-label="Seleccionar imagen ampliada">
+                {gallery.map((url, index) => (
+                  <button
+                    type="button"
+                    key={`zoom-${url}-${index}`}
+                    className={activeImage === url ? 'active' : ''}
+                    onClick={() => changeZoomImage(url)}
+                    aria-label={`Ampliar foto ${index + 1}`}
+                  >
+                    <img src={url} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <p className="product-image-lightbox-hint">
+              Usa los controles o haz doble clic sobre la imagen para acercar y alejar.
+            </p>
+          </div>
+        </div>
+      )}
 
       {showCheckout && product && (
         <CheckoutForm
