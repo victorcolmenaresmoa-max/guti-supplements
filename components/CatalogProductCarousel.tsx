@@ -14,7 +14,7 @@ interface CatalogProductCarouselProps {
 export default function CatalogProductCarousel({
   products,
   variant,
-  intervalMs = 6500,
+  intervalMs = 3600,
   className = '',
 }: CatalogProductCarouselProps) {
   const items = useMemo(
@@ -87,8 +87,6 @@ export default function CatalogProductCarousel({
     <div
       className={`catalog-product-carousel catalog-product-carousel-${variant} ${className}`.trim()}
       aria-label="Productos disponibles en el catálogo"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
@@ -98,7 +96,7 @@ export default function CatalogProductCarousel({
         style={{
           transform: `translate3d(-${position * 100}%, 0, 0)`,
           transition: transitionEnabled
-            ? 'transform 900ms cubic-bezier(0.22, 0.74, 0.24, 1)'
+            ? 'transform 650ms cubic-bezier(0.22, 0.74, 0.24, 1)'
             : 'none',
         }}
       >

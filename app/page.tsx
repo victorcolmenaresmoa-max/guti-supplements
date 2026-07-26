@@ -159,17 +159,19 @@ export default function HomePage() {
                 <CatalogProductCarousel
                   products={carouselProducts}
                   variant="hero"
-                  intervalMs={5200}
+                  intervalMs={3000}
                 />
                 <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
-              <div className="floating-card floating-card-top">
-                <span className="floating-icon"><Icon name="shield" size={19} /></span>
-                <div><strong>Compra acompañada</strong><small>Confirmamos cada detalle</small></div>
-              </div>
-              <div className="floating-card floating-card-bottom">
-                <span className="floating-icon"><Icon name="package" size={19} /></span>
-                <div><strong>Catálogo curado</strong><small>Información amplia y clara</small></div>
+              <div className="hero-floating-benefits">
+                <div className="floating-card floating-card-top">
+                  <span className="floating-icon"><Icon name="shield" size={19} /></span>
+                  <div><strong>Compra acompañada</strong><small>Confirmamos cada detalle</small></div>
+                </div>
+                <div className="floating-card floating-card-bottom">
+                  <span className="floating-icon"><Icon name="package" size={19} /></span>
+                  <div><strong>Catálogo curado</strong><small>Información amplia y clara</small></div>
+                </div>
               </div>
             </div>
           </div>
@@ -215,7 +217,7 @@ export default function HomePage() {
               <CatalogProductCarousel
                 products={carouselProducts}
                 variant="feature"
-                intervalMs={7600}
+                intervalMs={3800}
               />
               <div className="feature-visual-badge">
                 <Icon name="award" size={18} />
