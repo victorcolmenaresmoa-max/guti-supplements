@@ -159,7 +159,7 @@ export default function HomePage() {
                 <CatalogProductCarousel
                   products={carouselProducts}
                   variant="hero"
-                  intervalMs={3000}
+                  intervalMs={2700}
                 />
                 <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
@@ -217,7 +217,7 @@ export default function HomePage() {
               <CatalogProductCarousel
                 products={carouselProducts}
                 variant="feature"
-                intervalMs={3800}
+                intervalMs={3300}
               />
               <div className="feature-visual-badge">
                 <Icon name="award" size={18} />

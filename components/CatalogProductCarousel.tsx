@@ -96,7 +96,7 @@ export default function CatalogProductCarousel({
         style={{
           transform: `translate3d(-${position * 100}%, 0, 0)`,
           transition: transitionEnabled
-            ? 'transform 650ms cubic-bezier(0.22, 0.74, 0.24, 1)'
+            ? 'transform 520ms cubic-bezier(0.22, 0.74, 0.24, 1)'
             : 'none',
         }}
       >

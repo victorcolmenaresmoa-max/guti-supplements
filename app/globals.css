@@ -5747,3 +5747,476 @@ img {
     transition: none;
   }
 }
+
+/* =====================================================================
+   AJUSTE FINAL DE CARRUSELES Y EXPERIENCIA RESPONSIVE
+   ===================================================================== */
+
+/* Las imágenes se muestran completas y centradas, sin recortes artificiales. */
+.catalog-carousel-image-wrap img {
+  transform: none;
+  object-position: center center;
+}
+
+.catalog-carousel-slide:hover .catalog-carousel-image-wrap img {
+  transform: scale(1.025);
+}
+
+.catalog-product-carousel-hero .catalog-carousel-image-wrap img,
+.catalog-product-carousel-feature .catalog-carousel-image-wrap img {
+  transform: none;
+}
+
+.catalog-product-carousel-hero .catalog-carousel-slide:hover .catalog-carousel-image-wrap img,
+.catalog-product-carousel-feature .catalog-carousel-slide:hover .catalog-carousel-image-wrap img {
+  transform: scale(1.025);
+}
+
+/* El distintivo queda dentro del espacio superior del carrusel, sin aumentar
+   la altura de la sección ni cubrir el nombre del producto. */
+.feature-visual {
+  isolation: isolate;
+}
+
+.feature-visual-badge {
+  position: absolute;
+  z-index: 8;
+  top: 18px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 36px);
+  margin: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.catalog-product-carousel-feature .catalog-carousel-image-wrap {
+  padding: 92px 38px 20px;
+}
+
+/* Mejora de lectura y comodidad táctil en tablet y teléfono. */
+@media (max-width: 940px) {
+  .hero-grid {
+    gap: 34px;
+    padding-bottom: 72px;
+  }
+
+  .hero-stage {
+    width: min(420px, 92vw);
+  }
+
+  .feature-visual {
+    width: min(100%, 560px);
+  }
+
+  .feature-content {
+    width: min(100%, 620px);
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  html {
+    scroll-padding-top: 72px;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .container {
+    width: min(100% - 24px, 1240px);
+  }
+
+  .section {
+    padding: 66px 0;
+  }
+
+  .hero-grid {
+    gap: 30px;
+    padding-top: 54px;
+    padding-bottom: 58px;
+  }
+
+  .hero-badge {
+    margin-bottom: 18px;
+    padding: 7px 11px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-content > p {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .hero-actions {
+    margin-top: 26px;
+  }
+
+  .hero-rating {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-top: 22px;
+  }
+
+  .hero-visual {
+    min-height: auto;
+    gap: 14px;
+  }
+
+  .hero-stage {
+    width: min(390px, 94vw);
+  }
+
+  .hero-floating-benefits {
+    width: min(100%, 440px);
+  }
+
+  .floating-card {
+    min-height: 62px;
+  }
+
+  .floating-card strong {
+    font-size: 11.5px;
+    line-height: 1.2;
+  }
+
+  .floating-card small {
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
+
+  .catalog-product-carousel-feature {
+    aspect-ratio: 0.94;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-image-wrap {
+    padding: 82px 24px 16px;
+  }
+
+  .feature-visual-badge {
+    top: 14px;
+    max-width: calc(100% - 28px);
+    gap: 9px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(10, 0, 4, 0.2);
+  }
+
+  .feature-visual-badge strong {
+    font-size: 11.5px;
+  }
+
+  .feature-visual-badge small {
+    font-size: 9px;
+  }
+
+  .feature-content h2 {
+    font-size: clamp(34px, 10vw, 44px);
+  }
+
+  .feature-content > p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .feature-list > div {
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .feature-check {
+    margin-top: 1px;
+  }
+
+  .catalog-carousel-caption {
+    min-height: 82px;
+    padding: 14px 66px 15px 18px;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-caption {
+    min-height: 88px;
+    padding-left: 20px;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-caption strong {
+    font-size: 20px;
+  }
+
+  .catalog-carousel-progress {
+    right: 14px;
+    bottom: 31px;
+  }
+
+  .section-heading {
+    gap: 20px;
+  }
+
+  .section-heading p {
+    line-height: 1.65;
+  }
+
+  .catalog-search input {
+    min-height: 48px;
+  }
+
+  .filter-chip,
+  .btn,
+  .nav-shop-cta,
+  .mobile-menu-btn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar-inner {
+    min-height: 66px;
+    gap: 8px;
+  }
+
+  .mobile-menu-btn,
+  .nav-shop-cta {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .nav-links {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .nav-links a {
+    min-height: 46px;
+    padding: 14px 4px;
+  }
+
+  .hero-grid {
+    padding-top: 44px;
+    padding-bottom: 52px;
+  }
+
+  .hero h1 {
+    font-size: clamp(39px, 12.3vw, 54px);
+    line-height: 1;
+  }
+
+  .hero h1 em {
+    margin-top: 5px;
+  }
+
+  .hero-actions {
+    gap: 10px;
+  }
+
+  .hero-actions .btn {
+    min-height: 50px;
+  }
+
+  .hero-trust-row {
+    margin-top: 24px;
+    text-align: left;
+  }
+
+  .hero-stage {
+    width: min(354px, 96vw);
+  }
+
+  .catalog-product-carousel-hero {
+    width: 94%;
+    height: 94%;
+  }
+
+  .catalog-product-carousel-hero .catalog-carousel-image-wrap {
+    padding: 22px 18px 10px;
+  }
+
+  .catalog-product-carousel-hero .catalog-carousel-caption {
+    min-height: 74px;
+    padding: 12px 58px 13px 15px;
+  }
+
+  .hero-floating-benefits {
+    grid-template-columns: 1fr;
+    width: min(100%, 354px);
+    gap: 9px;
+  }
+
+  .floating-card {
+    padding: 10px 12px;
+  }
+
+  .floating-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .floating-card strong {
+    font-size: 11.5px;
+  }
+
+  .floating-card small {
+    font-size: 9.5px;
+  }
+
+  .hero-marquee {
+    padding: 12px 0;
+  }
+
+  .hero-marquee-group span {
+    font-size: 10.5px;
+  }
+
+  .section {
+    padding: 58px 0;
+  }
+
+  .section-heading h2,
+  .advisory-content h2,
+  .detail-section-heading h2 {
+    font-size: 34px;
+    line-height: 1.08;
+  }
+
+  .feature-grid {
+    gap: 32px;
+  }
+
+  .feature-visual {
+    width: 100%;
+  }
+
+  .catalog-product-carousel-feature {
+    aspect-ratio: 0.88;
+    border-radius: 22px;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-image-wrap {
+    padding: 76px 18px 12px;
+  }
+
+  .feature-visual-badge {
+    top: 12px;
+    max-width: calc(100% - 24px);
+    padding: 9px 12px;
+  }
+
+  .feature-visual-badge > svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .feature-visual-badge strong {
+    font-size: 10.5px;
+  }
+
+  .feature-visual-badge small {
+    font-size: 8.5px;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-caption {
+    min-height: 80px;
+    padding: 12px 58px 13px 16px;
+  }
+
+  .catalog-product-carousel-feature .catalog-carousel-caption strong,
+  .catalog-product-carousel-caption strong {
+    font-size: 17px;
+  }
+
+  .catalog-carousel-caption span {
+    font-size: 7.5px;
+  }
+
+  .catalog-carousel-progress {
+    right: 11px;
+    bottom: 29px;
+    max-width: 48px;
+  }
+
+  .catalog-carousel-progress span {
+    width: 4px;
+    height: 4px;
+  }
+
+  .catalog-carousel-progress span.active {
+    width: 12px;
+  }
+
+  .feature-content .btn,
+  .section-heading .btn,
+  .catalog-section .btn {
+    width: 100%;
+  }
+
+  .feature-list {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .trust-strip article {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .catalog-search {
+    min-width: 0;
+  }
+
+  .catalog-search input {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .filters {
+    width: 100%;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .product-card {
+    width: 100%;
+  }
+
+  .stats-band {
+    padding: 44px 0;
+  }
+
+  .stats-grid {
+    gap: 22px 10px;
+  }
+
+  .stats-grid strong {
+    font-size: 31px;
+  }
+
+  .stats-grid small {
+    font-size: 10.5px;
+  }
+
+  .benefit-card,
+  .testimonial-card {
+    padding: 24px 20px;
+  }
+
+  .cta-band {
+    padding: 60px 0;
+  }
+}
