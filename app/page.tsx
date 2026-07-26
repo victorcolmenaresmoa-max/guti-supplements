@@ -5,38 +5,11 @@ import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import PromotionsSection from '@/components/PromotionsSection';
 import Loader from '@/components/Loader';
+import CatalogProductCarousel from '@/components/CatalogProductCarousel';
 import Icon from '@/components/Icons';
 import { getProducts } from '@/lib/api';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
-import { SITE_PHOTOS, makePhotoFallback } from '@/lib/sitePhotos';
 import { Product } from '@/types';
-
-const CATEGORY_SHOWCASE = [
-  {
-    name: 'Proteína',
-    photo: SITE_PHOTOS.categories.Proteina,
-    tagline: 'Aislados y concentrados',
-    copy: 'Complementa tu ingesta diaria con fórmulas de alta solubilidad.',
-  },
-  {
-    name: 'Rendimiento',
-    photo: SITE_PHOTOS.categories.Rendimiento,
-    tagline: 'Fuerza y energía',
-    copy: 'Creatina, pre-entrenos y esenciales para tus sesiones intensas.',
-  },
-  {
-    name: 'Volumen',
-    photo: SITE_PHOTOS.categories.Volumen,
-    tagline: 'Ganancia calórica',
-    copy: 'Mezclas balanceadas para sumar calorías de forma práctica.',
-  },
-  {
-    name: 'Bienestar',
-    photo: SITE_PHOTOS.categories.Bienestar,
-    tagline: 'Salud integral',
-    copy: 'Vitaminas y apoyos diarios para acompañar tu estilo de vida.',
-  },
-];
 
 const BENEFITS = [
   { icon: 'award', title: 'Selección curada', text: 'Cada producto se elige por su calidad, pureza y respaldo de fabricante.' },
@@ -133,13 +106,8 @@ export default function HomePage() {
     });
   }, [products, filter, search]);
 
-  const goToCategory = (category: string) => {
-    setFilter(category);
-    setSearch('');
-    if (typeof document !== 'undefined') {
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+
+  const carouselProducts = products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   return (
     <>
@@ -188,11 +156,10 @@ export default function HomePage() {
 
             <div className="hero-visual" aria-label="GutiSupplements">
               <div className="hero-stage">
-                <img
-                  className="hero-photo"
-                  src={SITE_PHOTOS.hero.photo}
-                  onError={makePhotoFallback(SITE_PHOTOS.hero.fallback)}
-                  alt="Suplemento premium GutiSupplements"
+                <CatalogProductCarousel
+                  products={carouselProducts}
+                  variant="hero"
+                  intervalMs={5200}
                 />
                 <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
@@ -241,53 +208,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ============ CATEGORIES ============ */}
-        <section className="section categories-section">
-          <div className="container">
-            <div className="section-heading center">
-              <div>
-                <span className="eyebrow"><Icon name="layers" size={13} /> Explora por objetivo</span>
-                <h2>Categorías pensadas para ti</h2>
-                <p>Elige el camino que se ajusta a tu meta y descubre los productos disponibles en cada línea.</p>
-              </div>
-            </div>
-            <div className="category-grid">
-              {CATEGORY_SHOWCASE.map((category) => (
-                <button
-                  key={category.name}
-                  type="button"
-                  className="category-card"
-                  onClick={() => goToCategory(category.name)}
-                >
-                  <div className="category-art">
-                    <img
-                      src={category.photo.photo}
-                      onError={makePhotoFallback(category.photo.fallback)}
-                      alt={category.name}
-                      loading="lazy"
-                    />
-                    <span className="category-tagline">{category.tagline}</span>
-                  </div>
-                  <div className="category-body">
-                    <h3>{category.name}</h3>
-                    <p>{category.copy}</p>
-                    <span className="category-link">Ver productos <Icon name="arrowRight" size={15} /></span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ============ FEATURE BANNER ============ */}
         <section className="section feature-section">
           <div className="container feature-grid">
             <div className="feature-visual">
-              <img
-                src={SITE_PHOTOS.feature.photo}
-                onError={makePhotoFallback(SITE_PHOTOS.feature.fallback)}
-                alt="Estándares de calidad GutiSupplements"
-                loading="lazy"
+              <CatalogProductCarousel
+                products={carouselProducts}
+                variant="feature"
+                intervalMs={7600}
               />
               <div className="feature-visual-badge">
                 <Icon name="award" size={18} />
