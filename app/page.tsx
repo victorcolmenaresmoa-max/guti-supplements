@@ -210,40 +210,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ============ FEATURE BANNER ============ */}
-        <section className="section feature-section">
-          <div className="container feature-grid">
-            <div className="feature-visual">
-              <CatalogProductCarousel
-                products={carouselProducts}
-                variant="feature"
-                intervalMs={3300}
-              />
-              <div className="feature-visual-badge">
-                <Icon name="award" size={18} />
-                <div><strong>Estándar premium</strong><small>Cada lote, verificado</small></div>
-              </div>
-            </div>
-            <div className="feature-content">
-              <span className="eyebrow"><Icon name="target" size={13} /> Por qué GutiSupplements</span>
-              <h2>Calidad que puedes revisar antes de decidir.</h2>
-              <p>
-                No vendemos por vender. Reunimos información clara de cada producto —presentación,
-                ingredientes y modo de uso— para que elijas con criterio y con acompañamiento humano.
-              </p>
-              <div className="feature-list">
-                <div><span className="feature-check"><Icon name="check" size={15} /></span> Fórmulas seleccionadas por pureza y respaldo</div>
-                <div><span className="feature-check"><Icon name="check" size={15} /></span> Fichas completas: qué es, para qué y cómo usarlo</div>
-                <div><span className="feature-check"><Icon name="check" size={15} /></span> Confirmación de stock antes de cualquier pago</div>
-                <div><span className="feature-check"><Icon name="check" size={15} /></span> Comunicación directa, organizada y sin presiones</div>
-              </div>
-              <a href="#catalogo" className="btn btn-primary btn-lg">
-                Ver el catálogo <Icon name="arrowRight" size={18} />
-              </a>
-            </div>
-          </div>
-        </section>
-
         {/* ============ FEATURED PRODUCTS ============ */}
         {featured.length > 0 && (
           <section className="section featured-section">
