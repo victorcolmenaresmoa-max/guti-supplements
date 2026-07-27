@@ -5,6 +5,7 @@
  * Pestañas utilizadas:
  *   Productos
  *   Pedidos
+ *   Vendedores
  *
  * El script crea las pestañas y agrega automáticamente cualquier columna
  * nueva que falte. Esto permite actualizar una hoja que ya estaba usando
@@ -22,6 +23,7 @@ const SHEET_PRODUCTOS = 'Productos';
 const SHEET_PEDIDOS = 'Pedidos';
 const SHEET_PROMOCIONES = 'Promociones';
 const SHEET_CONFIG = 'Configuracion';
+const SHEET_VENDEDORES = 'Vendedores';
 
 const PRODUCT_HEADERS = [
   'ID',
@@ -54,6 +56,14 @@ const PROMO_HEADERS = [
 
 const CONFIG_HEADERS = ['Clave', 'Valor'];
 
+const SELLER_HEADERS = [
+  'ID',
+  'Nombre',
+  'Codigo',
+  'Activo',
+  'FechaCreacion',
+];
+
 // Tasa de cambio por defecto (bolívares por 1 USD). 0 = sin configurar:
 // mientras sea 0, la tienda muestra los precios solo en USD hasta que la
 // actualices desde el panel de administración.
@@ -72,6 +82,9 @@ const ORDER_HEADERS = [
   'Notas',
   'Items',
   'Total',
+  'VendedorID',
+  'VendedorCodigo',
+  'VendedorNombre',
   'Estado',
 ];
 
@@ -96,6 +109,7 @@ function setupGutiSupplements() {
   const ordersSheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
   const promotionsSheet = getSheet_(SHEET_PROMOCIONES, PROMO_HEADERS);
   const configSheet = getSheet_(SHEET_CONFIG, CONFIG_HEADERS);
+  const sellersSheet = getSheet_(SHEET_VENDEDORES, SELLER_HEADERS);
   ensureConfigDefaults_(configSheet);
   SpreadsheetApp.flush();
 
@@ -107,8 +121,10 @@ function setupGutiSupplements() {
     ordersSheet: ordersSheet.getName(),
     promotionsSheet: promotionsSheet.getName(),
     configSheet: configSheet.getName(),
+    sellersSheet: sellersSheet.getName(),
     productHeaders: getHeaders_(productsSheet),
     orderHeaders: getHeaders_(ordersSheet),
+    sellerHeaders: getHeaders_(sellersSheet),
   };
 
   Logger.log(JSON.stringify(result, null, 2));
@@ -310,6 +326,9 @@ function rowToOrder_(row, headers) {
     notas: String(read('Notas') || ''),
     items: safeJsonParse_(read('Items'), []),
     total: Number(read('Total')) || 0,
+    vendedorId: String(read('VendedorID') || ''),
+    vendedorCodigo: String(read('VendedorCodigo') || ''),
+    vendedorNombre: String(read('VendedorNombre') || ''),
     estado: String(read('Estado') || 'Pendiente'),
   };
 }
@@ -329,6 +348,85 @@ function rowToPromotion_(row, headers) {
     activo: map.Activo !== undefined ? toBoolean_(row[map.Activo]) : true,
     destacado: map.Destacado !== undefined ? toBoolean_(row[map.Destacado]) : false,
   };
+}
+
+
+function rowToSeller_(row, headers) {
+  const map = getHeaderMap_(headers);
+  const read = function (header) {
+    return map[header] !== undefined ? row[map[header]] : '';
+  };
+
+  return {
+    id: String(read('ID') || ''),
+    nombre: String(read('Nombre') || ''),
+    codigo: normalizeSellerCode_(read('Codigo')),
+    activo: map.Activo !== undefined ? toBoolean_(read('Activo')) : true,
+    fechaCreacion: dateToIso_(read('FechaCreacion')),
+  };
+}
+
+function normalizeSellerCode_(value) {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9_-]/g, '')
+    .substring(0, 40);
+}
+
+function sellerCodeBaseFromName_(name) {
+  const raw = String(name || '').trim();
+  let normalized = raw;
+  try {
+    normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  } catch (error) {
+    normalized = raw;
+  }
+
+  return normalizeSellerCode_(normalized.replace(/\s+/g, '-')) || 'VENDEDOR';
+}
+
+function sellerCodeExists_(sheet, code, excludedId) {
+  const normalizedCode = normalizeSellerCode_(code);
+  if (!normalizedCode || sheet.getLastRow() < 2) return false;
+
+  const headers = getHeaders_(sheet);
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
+  return rows.some(function (row) {
+    const seller = rowToSeller_(row, headers);
+    return seller.codigo === normalizedCode && seller.id !== String(excludedId || '');
+  });
+}
+
+function createUniqueSellerCode_(sheet, name, requestedCode, excludedId) {
+  const requested = normalizeSellerCode_(requestedCode);
+  const base = requested || sellerCodeBaseFromName_(name);
+  let candidate = base;
+  let suffix = 2;
+
+  while (sellerCodeExists_(sheet, candidate, excludedId)) {
+    candidate = String(base).substring(0, 35) + '-' + suffix;
+    suffix += 1;
+  }
+
+  return candidate;
+}
+
+function findActiveSellerByCode_(code) {
+  const normalizedCode = normalizeSellerCode_(code);
+  if (!normalizedCode) return null;
+
+  const sheet = getSheet_(SHEET_VENDEDORES, SELLER_HEADERS);
+  const headers = getHeaders_(sheet);
+  if (sheet.getLastRow() < 2) return null;
+
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
+  for (let index = 0; index < rows.length; index++) {
+    const seller = rowToSeller_(rows[index], headers);
+    if (seller.codigo === normalizedCode && seller.activo) return seller;
+  }
+
+  return null;
 }
 
 /**
@@ -435,6 +533,9 @@ function doPost(e) {
       'updatePromotion',
       'deletePromotion',
       'updateConfig',
+      'getSellers',
+      'addSeller',
+      'updateSeller',
     ];
 
     if (adminActions.indexOf(action) !== -1 && body.token !== ADMIN_TOKEN) {
@@ -462,6 +563,12 @@ function doPost(e) {
         return handleDeletePromotion_(body.id);
       case 'updateConfig':
         return handleUpdateConfig_(body.config);
+      case 'getSellers':
+        return handleGetSellers_();
+      case 'addSeller':
+        return handleAddSeller_(body.seller);
+      case 'updateSeller':
+        return handleUpdateSeller_(body.seller);
       default:
         return jsonResponse_({ ok: false, message: 'Acción no reconocida.' });
     }
@@ -623,6 +730,7 @@ function handleCreateOrder_(order) {
   try {
     const sheet = getSheet_(SHEET_PEDIDOS, ORDER_HEADERS);
     const id = generateId_();
+    const seller = findActiveSellerByCode_(order.vendedorCodigo);
 
     appendObject_(sheet, {
       ID: id,
@@ -637,6 +745,9 @@ function handleCreateOrder_(order) {
       Notas: String(order.notas || '').trim(),
       Items: JSON.stringify(order.items),
       Total: Number(order.total) || 0,
+      VendedorID: seller ? seller.id : '',
+      VendedorCodigo: seller ? seller.codigo : '',
+      VendedorNombre: seller ? seller.nombre : '',
       Estado: 'Pendiente',
 
       // Compatibilidad con columnas antiguas que puedan seguir en la hoja.
@@ -800,6 +911,104 @@ function handleDeletePromotion_(id) {
 
   sheet.deleteRow(rowNumber);
   return jsonResponse_({ ok: true, data: null });
+}
+
+// ---------------------------------------------------------------------
+// Vendedores y enlaces de referencia
+// ---------------------------------------------------------------------
+
+function handleGetSellers_() {
+  const sheet = getSheet_(SHEET_VENDEDORES, SELLER_HEADERS);
+  const headers = getHeaders_(sheet);
+
+  if (sheet.getLastRow() < 2) return jsonResponse_({ ok: true, data: [] });
+
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
+  const sellers = rows
+    .map(function (row) {
+      return rowToSeller_(row, headers);
+    })
+    .filter(function (seller) {
+      return seller.id !== '';
+    })
+    .sort(function (a, b) {
+      if (a.activo !== b.activo) return a.activo ? -1 : 1;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+  return jsonResponse_({ ok: true, data: sellers });
+}
+
+function handleAddSeller_(seller) {
+  const name = seller ? String(seller.nombre || '').trim() : '';
+  if (!name) {
+    return jsonResponse_({ ok: false, message: 'El nombre del vendedor es obligatorio.' });
+  }
+
+  const sheet = getSheet_(SHEET_VENDEDORES, SELLER_HEADERS);
+  const id = generateId_();
+  const code = createUniqueSellerCode_(sheet, name, seller.codigo, '');
+  const createdAt = new Date();
+  const active = seller.activo === undefined ? true : Boolean(seller.activo);
+
+  appendObject_(sheet, {
+    ID: id,
+    Nombre: name,
+    Codigo: code,
+    Activo: active,
+    FechaCreacion: createdAt,
+  });
+
+  return jsonResponse_({
+    ok: true,
+    data: {
+      id: id,
+      nombre: name,
+      codigo: code,
+      activo: active,
+      fechaCreacion: createdAt.toISOString(),
+    },
+  });
+}
+
+function handleUpdateSeller_(seller) {
+  if (!seller || !seller.id) {
+    return jsonResponse_({ ok: false, message: 'ID de vendedor requerido.' });
+  }
+
+  const name = String(seller.nombre || '').trim();
+  if (!name) {
+    return jsonResponse_({ ok: false, message: 'El nombre del vendedor es obligatorio.' });
+  }
+
+  const sheet = getSheet_(SHEET_VENDEDORES, SELLER_HEADERS);
+  const rowNumber = findRowById_(sheet, seller.id);
+  if (rowNumber === -1) {
+    return jsonResponse_({ ok: false, message: 'Vendedor no encontrado.' });
+  }
+
+  const code = createUniqueSellerCode_(sheet, name, seller.codigo, seller.id);
+  const headers = getHeaders_(sheet);
+  const currentRow = sheet.getRange(rowNumber, 1, 1, headers.length).getValues()[0];
+  const current = rowToSeller_(currentRow, headers);
+  const active = seller.activo === undefined ? current.activo : Boolean(seller.activo);
+
+  updateObjectRow_(sheet, rowNumber, {
+    Nombre: name,
+    Codigo: code,
+    Activo: active,
+  });
+
+  return jsonResponse_({
+    ok: true,
+    data: {
+      id: String(seller.id),
+      nombre: name,
+      codigo: code,
+      activo: active,
+      fechaCreacion: current.fechaCreacion,
+    },
+  });
 }
 
 // ---------------------------------------------------------------------

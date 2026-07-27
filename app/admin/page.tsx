@@ -6,27 +6,31 @@ import AdminProductList from '@/components/AdminProductList';
 import AdminPromotionForm from '@/components/AdminPromotionForm';
 import AdminPromotionList from '@/components/AdminPromotionList';
 import AdminOrderList from '@/components/AdminOrderList';
+import AdminSellerDashboard, { SellerSaveInput } from '@/components/AdminSellerDashboard';
 import BrandLogo from '@/components/BrandLogo';
 import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
 import {
   addProduct,
   addPromotion,
+  addSeller,
   deleteProduct,
   deletePromotion,
   getOrders,
   getProducts,
   getPromotions,
+  getSellers,
   updateOrderStatus,
   updateProduct,
   updatePromotion,
+  updateSeller,
 } from '@/lib/api';
-import { OrderRecord, Product, Promotion } from '@/types';
+import { OrderRecord, Product, Promotion, Seller } from '@/types';
 
 const AUTH_KEY = 'guti-supplements-admin-auth';
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
 
-type AdminTab = 'orders' | 'products' | 'promotions';
+type AdminTab = 'orders' | 'products' | 'promotions' | 'sellers';
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -37,9 +41,11 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingPromotions, setLoadingPromotions] = useState(true);
+  const [loadingSellers, setLoadingSellers] = useState(true);
   const [loadingForm, setLoadingForm] = useState(false);
   const [loadingPromoForm, setLoadingPromoForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -47,6 +53,7 @@ export default function AdminPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingPromoId, setDeletingPromoId] = useState<string | null>(null);
   const [changingStatusId, setChangingStatusId] = useState<string | null>(null);
+  const [savingSellerId, setSavingSellerId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState('');
 
   useEffect(() => {
@@ -58,6 +65,7 @@ export default function AdminPage() {
       void loadProducts();
       void loadOrders();
       void loadPromotions();
+      void loadSellers();
     }
   }, [authenticated]);
 
@@ -92,6 +100,17 @@ export default function AdminPage() {
       setGlobalError(response.message);
     }
     setLoadingPromotions(false);
+  };
+
+  const loadSellers = async () => {
+    setLoadingSellers(true);
+    const response = await getSellers();
+    if (response.ok && response.data) {
+      setSellers(response.data);
+    } else if (response.message) {
+      setGlobalError(response.message);
+    }
+    setLoadingSellers(false);
   };
 
   const handleLogin = (event: React.FormEvent) => {
@@ -165,6 +184,49 @@ export default function AdminPage() {
       setGlobalError(response.message || 'No se pudo eliminar la oferta.');
     }
     setDeletingPromoId(null);
+  };
+
+  const handleSaveSeller = async (seller: SellerSaveInput) => {
+    const sellerId = seller.id || 'new';
+    setSavingSellerId(sellerId);
+    setGlobalError('');
+
+    const response = seller.id
+      ? await updateSeller({
+          id: seller.id,
+          nombre: seller.nombre,
+          codigo: seller.codigo,
+          activo: seller.activo,
+          fechaCreacion: seller.fechaCreacion || '',
+        })
+      : await addSeller({
+          nombre: seller.nombre,
+          codigo: seller.codigo,
+          activo: seller.activo,
+        });
+
+    if (response.ok) {
+      await loadSellers();
+      setSavingSellerId(null);
+      return true;
+    }
+
+    setGlobalError(response.message || 'No se pudo guardar el vendedor.');
+    setSavingSellerId(null);
+    return false;
+  };
+
+  const handleToggleSeller = async (seller: Seller) => {
+    setSavingSellerId(seller.id);
+    setGlobalError('');
+    const response = await updateSeller({ ...seller, activo: !seller.activo });
+
+    if (response.ok && response.data) {
+      setSellers((current) => current.map((item) => item.id === seller.id ? response.data as Seller : item));
+    } else {
+      setGlobalError(response.message || 'No se pudo cambiar el estado del vendedor.');
+    }
+    setSavingSellerId(null);
   };
 
   const handleOrderStatus = async (id: string, status: string) => {
@@ -251,6 +313,11 @@ export default function AdminPage() {
             <span>Pedidos</span>
             {stats.pending > 0 && <b>{stats.pending}</b>}
           </button>
+          <button className={activeTab === 'sellers' ? 'active' : ''} onClick={() => setActiveTab('sellers')}>
+            <Icon name="users" size={19} />
+            <span>Vendedores</span>
+            <b>{sellers.length}</b>
+          </button>
           <button className={activeTab === 'products' ? 'active' : ''} onClick={() => setActiveTab('products')}>
             <Icon name="products" size={19} />
             <span>Productos</span>
@@ -290,6 +357,8 @@ export default function AdminPage() {
             <h1>
               {activeTab === 'orders'
                 ? 'Gestión de pedidos'
+                : activeTab === 'sellers'
+                ? 'Ventas por vendedor'
                 : activeTab === 'promotions'
                 ? 'Gestión de ofertas'
                 : 'Gestión del catálogo'}
@@ -300,6 +369,7 @@ export default function AdminPage() {
               className="btn btn-outline btn-sm"
               onClick={() => {
                 if (activeTab === 'orders') void loadOrders();
+                else if (activeTab === 'sellers') { void loadSellers(); void loadOrders(); }
                 else if (activeTab === 'promotions') void loadPromotions();
                 else void loadProducts();
               }}
@@ -324,6 +394,8 @@ export default function AdminPage() {
               <h2>
                 {activeTab === 'orders'
                   ? 'Tus pedidos, siempre bajo control'
+                  : activeTab === 'sellers'
+                  ? 'Tus ventas, asociadas al vendedor correcto'
                   : activeTab === 'promotions'
                   ? 'Tus ofertas, listas para publicar'
                   : 'Tu catálogo, siempre ordenado'}
@@ -360,6 +432,16 @@ export default function AdminPage() {
                 orders={orders}
                 changingStatusId={changingStatusId}
                 onStatusChange={handleOrderStatus}
+              />
+            )
+          ) : activeTab === 'sellers' ? (
+            loadingSellers || loadingOrders ? <Loader label="Cargando vendedores y pedidos..." /> : (
+              <AdminSellerDashboard
+                sellers={sellers}
+                orders={orders}
+                savingSellerId={savingSellerId}
+                onSave={handleSaveSeller}
+                onToggle={handleToggleSeller}
               />
             )
           ) : activeTab === 'promotions' ? (

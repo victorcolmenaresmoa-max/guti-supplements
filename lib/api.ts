@@ -4,6 +4,7 @@ import {
   OrderRecord,
   Product,
   Promotion,
+  Seller,
   StoreConfig,
 } from '@/types';
 
@@ -187,5 +188,37 @@ export async function updateConfig(
     method: 'POST',
     action: 'updateConfig',
     body: { config },
+  });
+}
+
+
+// ---------------------------------------------------------------------
+// Vendedores y enlaces de referencia
+// ---------------------------------------------------------------------
+
+export async function getSellers(): Promise<ApiResponse<Seller[]>> {
+  return gasFetch<Seller[]>({
+    method: 'POST',
+    action: 'getSellers',
+  });
+}
+
+export async function addSeller(
+  seller: Omit<Seller, 'id' | 'fechaCreacion'>
+): Promise<ApiResponse<Seller>> {
+  return gasFetch<Seller>({
+    method: 'POST',
+    action: 'addSeller',
+    body: { seller },
+  });
+}
+
+export async function updateSeller(
+  seller: Seller
+): Promise<ApiResponse<Seller>> {
+  return gasFetch<Seller>({
+    method: 'POST',
+    action: 'updateSeller',
+    body: { seller },
   });
 }

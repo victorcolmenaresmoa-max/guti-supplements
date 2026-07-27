@@ -84,6 +84,8 @@ export default function AdminOrderList({
         order.telefono,
         order.email,
         order.ubicacion,
+        order.vendedorNombre,
+        order.vendedorCodigo,
         order.id,
       ]
         .map((value) => String(value || '').toLowerCase())
@@ -119,7 +121,7 @@ export default function AdminOrderList({
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nombre, WhatsApp, ubicación o ID"
+            placeholder="Buscar por cliente, vendedor, WhatsApp, ubicación o ID"
           />
         </div>
         <div className="orders-filter-row">
@@ -160,6 +162,9 @@ export default function AdminOrderList({
                       <div>
                         <h4>{order.cliente}</h4>
                         <span>Pedido #{order.id.slice(0, 8).toUpperCase()} · {formatDate(order.fecha)}</span>
+                        {order.vendedorNombre && (
+                          <span className="order-seller-chip"><Icon name="users" size={13} /> {order.vendedorNombre} · {order.vendedorCodigo}</span>
+                        )}
                       </div>
                       <span className={`order-status status-${order.estado.toLowerCase().replace(/\s+/g, '-')}`}>
                         {order.estado}
@@ -227,6 +232,7 @@ export default function AdminOrderList({
                         <div><dt>WhatsApp</dt><dd>{order.telefono || 'No indicado'}</dd></div>
                         <div><dt>Correo</dt><dd>{order.email || 'No indicado'}</dd></div>
                         <div><dt>Ubicación</dt><dd>{order.ubicacion || 'No indicada'}</dd></div>
+                        <div><dt>Vendedor</dt><dd>{order.vendedorNombre ? `${order.vendedorNombre} (${order.vendedorCodigo})` : 'Pedido directo'}</dd></div>
                       </dl>
                     </section>
 

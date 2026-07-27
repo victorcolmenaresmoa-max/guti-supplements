@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import SellerReferralTracker from '@/components/SellerReferralTracker';
 
 export const metadata: Metadata = {
   title: 'GutiSupplements | Suplementos Premium',
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body><SellerReferralTracker />{children}</body>
     </html>
   );
 }

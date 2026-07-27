@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createOrder } from '@/lib/api';
 import { Product } from '@/types';
 import { formatUSD } from '@/lib/currency';
+import { getStoredSellerReferral } from '@/lib/referral';
 import Icon from './Icons';
 
 const INITIAL_FORM = {
@@ -73,6 +74,8 @@ export default function CheckoutForm({ product, quantity, onClose }: CheckoutFor
       return;
     }
 
+    const vendedorCodigo = getStoredSellerReferral();
+
     setLoading(true);
     const response = await createOrder({
       ...form,
@@ -86,6 +89,7 @@ export default function CheckoutForm({ product, quantity, onClose }: CheckoutFor
         },
       ],
       total,
+      vendedorCodigo: vendedorCodigo || undefined,
     });
     setLoading(false);
 

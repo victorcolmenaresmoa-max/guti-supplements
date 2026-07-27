@@ -50,6 +50,14 @@ export interface OrderItem {
   cantidad: number;
 }
 
+export interface Seller {
+  id: string;
+  nombre: string;
+  codigo: string;
+  activo: boolean;
+  fechaCreacion: string;
+}
+
 export interface OrderPayload {
   cliente: string;
   telefono: string;
@@ -61,12 +69,16 @@ export interface OrderPayload {
   notas: string;
   items: OrderItem[];
   total: number;
+  /** Código de vendedor capturado desde ?ref= y validado por Apps Script. */
+  vendedorCodigo?: string;
 }
 
 export interface OrderRecord extends OrderPayload {
   id: string;
   fecha: string;
   estado: string;
+  vendedorId?: string;
+  vendedorNombre?: string;
 }
 
 export interface ApiResponse<T = unknown> {
