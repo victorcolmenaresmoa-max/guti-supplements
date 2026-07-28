@@ -48,13 +48,16 @@ export interface ShowcaseItem {
  * archivos reales siguiendo la guía GUIA-IMAGENES.md.
  */
 export const HERO_SHOWCASE: ShowcaseItem[] = [
-  { src: '/catalogo/creatina-monohidratada.webp', alt: 'Creatina monohidratada micronizada', width: 360, height: 480 },
-  { src: '/catalogo/whey-protein-isolate.webp', alt: 'Whey protein isolate', width: 360, height: 480 },
-  { src: '/catalogo/mass-gainer.webp', alt: 'Mass gainer fórmula balanceada', width: 360, height: 480 },
-  { src: '/catalogo/pre-entreno.webp', alt: 'Pre-entreno en polvo', width: 360, height: 480 },
-  { src: '/catalogo/bcaa.webp', alt: 'BCAA aminoácidos ramificados', width: 360, height: 480 },
-  { src: '/catalogo/omega-3.webp', alt: 'Omega 3 en cápsulas blandas', width: 360, height: 480 },
-  { src: '/catalogo/multivitaminico.webp', alt: 'Multivitamínico diario', width: 360, height: 480 },
-  { src: '/catalogo/glutamina.webp', alt: 'Glutamina en polvo', width: 360, height: 480 },
-  { src: '/catalogo/colageno.webp', alt: 'Colágeno hidrolizado', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-05196acb-a2e3-4bb2-aee6-9d27ccfd6192-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-2de5f87e-790c-478c-bcbd-35b588b712e6-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-419d3e8d-10af-4bc1-a8bc-200cf9cff32f-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-45e1414c-1165-4869-8722-fa21a8326db1-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-470cc9a1-2ae2-43b5-be29-933288af796e-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-6b38f2bb-cab2-4011-9377-e49e938f4f53-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-848fde13-7202-411b-b4fa-81d8dea6af5f-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-8be0eb52-56f6-493f-b563-08985bff4876-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-bb2d5204-2e2f-4c63-8230-04db4a9a6f4c-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-cd901e10-354b-4983-9f0f-93836148b9d8-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-f5595868-8644-4289-939e-908459ace4b6-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
+  { src: '/catalogo/2026-07-26-f802a04a-867f-473f-971b-889bbcc5a081-removebg-preview.webp', alt: 'Guti Supplement', width: 360, height: 480 },
 ];
