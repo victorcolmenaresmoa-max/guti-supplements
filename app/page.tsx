@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import PromotionsSection from '@/components/PromotionsSection';
 import Loader from '@/components/Loader';
-import CatalogProductCarousel from '@/components/CatalogProductCarousel';
+import HeroProductMarquee from '@/components/HeroProductMarquee';
 import Icon from '@/components/Icons';
 import { getProducts } from '@/lib/api';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackProducts';
@@ -107,7 +107,6 @@ export default function HomePage() {
   }, [products, filter, search]);
 
 
-  const carouselProducts = products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   return (
     <>
@@ -156,11 +155,7 @@ export default function HomePage() {
 
             <div className="hero-visual" aria-label="GutiSupplements">
               <div className="hero-stage">
-                <CatalogProductCarousel
-                  products={carouselProducts}
-                  variant="hero"
-                  intervalMs={2700}
-                />
+                <HeroProductMarquee columns={3} speedSeconds={34} />
                 <img className="hero-float-seal" src="/art/seal.svg" alt="Sello de calidad" />
               </div>
               <div className="hero-floating-benefits">
