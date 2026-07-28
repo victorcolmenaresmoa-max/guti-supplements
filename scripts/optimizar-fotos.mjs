@@ -30,7 +30,7 @@ const ALTO = 480;
 
 // Pon `true` si tus fotos tienen el fondo recortado (PNG con
 // transparencia) y quieres conservarlo.
-const CONSERVAR_TRANSPARENCIA = false;
+const CONSERVAR_TRANSPARENCIA = true;
 
 const EXTENSIONES = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.tif', '.tiff']);
 
