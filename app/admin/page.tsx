@@ -12,6 +12,9 @@ import Loader from '@/components/Loader';
 import Icon from '@/components/Icons';
 import {
   addProduct,
+  adminLogin,
+  adminLogout,
+  checkAdminSession,
   addPromotion,
   addSeller,
   deleteProduct,
@@ -27,13 +30,12 @@ import {
 } from '@/lib/api';
 import { OrderRecord, Product, Promotion, Seller } from '@/types';
 
-const AUTH_KEY = 'guti-supplements-admin-auth';
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
-
 type AdminTab = 'orders' | 'products' | 'promotions' | 'sellers';
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState<AdminTab>('orders');
@@ -57,7 +59,18 @@ export default function AdminPage() {
   const [globalError, setGlobalError] = useState('');
 
   useEffect(() => {
-    if (sessionStorage.getItem(AUTH_KEY) === 'true') setAuthenticated(true);
+    let active = true;
+
+    (async () => {
+      const response = await checkAdminSession();
+      if (!active) return;
+      setAuthenticated(Boolean(response.ok && response.data?.authenticated));
+      setCheckingSession(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -113,19 +126,20 @@ export default function AdminPage() {
     setLoadingSellers(false);
   };
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!ADMIN_PASSWORD) {
-      setAuthError('Falta configurar NEXT_PUBLIC_ADMIN_PASSWORD en las variables de entorno.');
-      return;
-    }
-    if (passwordInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem(AUTH_KEY, 'true');
+    setAuthLoading(true);
+    setAuthError('');
+
+    const response = await adminLogin(passwordInput);
+    if (response.ok && response.data?.authenticated) {
       setAuthenticated(true);
-      setAuthError('');
+      setPasswordInput('');
     } else {
-      setAuthError('La contraseña ingresada no es correcta.');
+      setAuthError(response.message || 'No se pudo iniciar sesión.');
     }
+
+    setAuthLoading(false);
   };
 
   const handleAddOrUpdate = async (data: Omit<Product, 'id'>) => {
@@ -250,6 +264,14 @@ export default function AdminPage() {
     return { pending, requestedValue, lowStock, totalOrders: orders.length };
   }, [orders, products]);
 
+  if (checkingSession) {
+    return (
+      <main className="admin-login-page">
+        <Loader label="Comprobando sesión administrativa..." />
+      </main>
+    );
+  }
+
   if (!authenticated) {
     return (
       <main className="admin-login-page">
@@ -291,8 +313,12 @@ export default function AdminPage() {
                   autoFocus
                 />
               </div>
-              <button type="submit" className="btn btn-primary btn-block btn-lg">
-                Entrar al panel <Icon name="arrowRight" size={18} />
+              <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={authLoading}>
+                {authLoading ? (
+                  <><span className="spinner" /> Verificando...</>
+                ) : (
+                  <>Entrar al panel <Icon name="arrowRight" size={18} /></>
+                )}
               </button>
             </form>
             <a href="/" className="admin-back-store"><Icon name="chevronLeft" size={16} /> Volver a la tienda</a>
@@ -341,7 +367,7 @@ export default function AdminPage() {
           <button
             className="admin-sidebar-link"
             onClick={() => {
-              sessionStorage.removeItem(AUTH_KEY);
+              void adminLogout();
               setAuthenticated(false);
             }}
           >

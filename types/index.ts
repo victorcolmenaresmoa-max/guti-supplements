@@ -69,7 +69,7 @@ export interface OrderPayload {
   notas: string;
   items: OrderItem[];
   total: number;
-  /** Código de vendedor capturado desde ?ref= y validado por Apps Script. */
+  /** Código de vendedor capturado desde ?ref= y validado en Supabase. */
   vendedorCodigo?: string;
 }
 

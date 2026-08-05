@@ -3,7 +3,7 @@
 ## Por qué se veía el hueco vacío
 
 El carrusel anterior mostraba productos del catálogo, y el catálogo llega
-por `fetch` desde Google Apps Script **después** de que la página se pinta.
+por `fetch` desde la API interna conectada a Supabase **después** de que la página se pinta.
 La secuencia era:
 
 ```
@@ -121,7 +121,7 @@ Qué deberías ver:
   primero y las fotos aparecen dentro.
 
 Si en Network ves las fotos disparándose *después* de la llamada a
-`script.google.com`, algo quedó apuntando al catálogo dinámico.
+`/api/store`, el catálogo dinámico sigue cargándose correctamente desde Supabase.
 
 ---
 
