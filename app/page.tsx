@@ -29,7 +29,7 @@ const STATS = [
 
 const TESTIMONIALS = [
   {
-    avatar: 'https://cdn.phototourl.com/free/2026-08-06-a55bca7a-3adb-4373-bd8f-1e5afb74a834.jpg',
+    avatar: '/art/avatar-1.svg',
     name: 'María G.',
     role: 'Rutina de fuerza',
     quote: 'Me ayudaron a elegir la proteína correcta y confirmaron todo antes de pagar. La atención marcó la diferencia.',
